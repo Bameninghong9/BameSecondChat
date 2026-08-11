@@ -110,7 +110,12 @@ public class TabManager {
         tabs.add(allTab);
         
         for (ChatTab tab : loadedTabs) {
-            if (!tab.getName().equalsIgnoreCase("All")) {
+            if (tab.getName().equalsIgnoreCase("All")) {
+                allTab.setX(tab.getX());
+                allTab.setY(tab.getY());
+                allTab.setWidth(tab.getWidth());
+                allTab.setHeight(tab.getHeight());
+            } else {
                 tabs.add(tab);
             }
         }

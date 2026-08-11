@@ -56,10 +56,7 @@ public class ModConfig {
             data.hudX = TabManager.getInstance().getHudX();
             data.hudY = TabManager.getInstance().getHudY();
             
-            // We don't want to save the "All" tab.
-            data.tabs = TabManager.getInstance().getTabs().stream()
-                    .filter(tab -> !tab.getName().equalsIgnoreCase("All"))
-                    .toList();
+            data.tabs = TabManager.getInstance().getTabs();
             
             GSON.toJson(data, writer);
         } catch (IOException e) {

@@ -15,15 +15,15 @@ import java.util.Optional;
 
 public class ClipboardImageUtil {
 
-    public static void copyMessagesToClipboard(List<ChatMessage> messages) {
-        if (messages == null || messages.isEmpty()) {
+    public static void copyMessagesToClipboard(List<com.bame.secondchat.data.SelectedLine> selectedLines, int chatWidth) {
+        if (selectedLines == null || selectedLines.isEmpty()) {
             return;
         }
 
         int lineHeight = 20;
         int padding = 10;
-        int width = 800; // Fixed width, could be calculated dynamically
-        int height = (messages.size() * lineHeight) + (padding * 2);
+        int width = chatWidth > 0 ? chatWidth : 800;
+        int height = (selectedLines.size() * lineHeight) + (padding * 2);
 
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2d = image.createGraphics();
@@ -42,22 +42,30 @@ public class ClipboardImageUtil {
 
         int currentY = padding + fm.getAscent();
 
-        for (ChatMessage msg : messages) {
+        net.minecraft.client.MinecraftClient client = net.minecraft.client.MinecraftClient.getInstance();
+
+        for (com.bame.secondchat.data.SelectedLine sl : selectedLines) {
             final int[] currentX = {padding};
             final int y = currentY;
 
-            msg.getMessage().visit((style, string) -> {
-                int rgb = 0xFFFFFF;
-                if (style != null && style.getColor() != null) {
-                    rgb = style.getColor().getRgb();
-                }
+            java.util.List<net.minecraft.text.OrderedText> wrappedLines = client.textRenderer.wrapLines(sl.getMessage().getMessage(), chatWidth - 8);
+            if (sl.getLineIndex() >= 0 && sl.getLineIndex() < wrappedLines.size()) {
+                net.minecraft.text.OrderedText orderedText = wrappedLines.get(sl.getLineIndex());
                 
-                g2d.setColor(new Color(rgb));
-                g2d.drawString(string, currentX[0], y);
-                currentX[0] += fm.stringWidth(string);
-                
-                return Optional.empty();
-            }, Style.EMPTY);
+                orderedText.accept((index, style, codePoint) -> {
+                    int rgb = 0xFFFFFF;
+                    if (style != null && style.getColor() != null) {
+                        rgb = style.getColor().getRgb();
+                    }
+                    
+                    g2d.setColor(new Color(rgb));
+                    String string = new String(Character.toChars(codePoint));
+                    g2d.drawString(string, currentX[0], y);
+                    currentX[0] += fm.stringWidth(string);
+                    
+                    return true;
+                });
+            }
 
             currentY += lineHeight;
         }

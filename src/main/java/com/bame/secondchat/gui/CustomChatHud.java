@@ -31,31 +31,40 @@ public class CustomChatHud {
                                     org.lwjgl.glfw.GLFW.glfwGetKey(client.getWindow().getHandle(), org.lwjgl.glfw.GLFW.GLFW_KEY_RIGHT_CONTROL) == org.lwjgl.glfw.GLFW.GLFW_PRESS;
             
             if (isSPressed && isCtrlPressed && !wasSPressed) {
-                java.util.Set<ChatMessage> selected = activeTab.getSelectedMessages();
+                java.util.Set<com.bame.secondchat.data.SelectedLine> selected = activeTab.getSelectedLines();
                 if (!selected.isEmpty()) {
-                    java.util.List<ChatMessage> orderedSelection = new java.util.ArrayList<>();
+                    java.util.List<com.bame.secondchat.data.SelectedLine> orderedSelection = new java.util.ArrayList<>();
                     for (ChatMessage msg : activeTab.getMessages()) {
-                        if (selected.contains(msg)) {
-                            orderedSelection.add(msg);
+                        java.util.List<net.minecraft.text.OrderedText> wrapped = client.textRenderer.wrapLines(msg.getMessage(), activeTab.getWidth() - 8);
+                        for (int l = 0; l < wrapped.size(); l++) {
+                            com.bame.secondchat.data.SelectedLine sl = new com.bame.secondchat.data.SelectedLine(msg, l);
+                            if (selected.contains(sl)) {
+                                orderedSelection.add(sl);
+                            }
                         }
                     }
-                    com.bame.secondchat.util.ClipboardImageUtil.copyMessagesToClipboard(orderedSelection);
+                    com.bame.secondchat.util.ClipboardImageUtil.copyMessagesToClipboard(orderedSelection, activeTab.getWidth());
                     activeTab.clearSelection();
                 }
             }
             
             if (isCPressed && isCtrlPressed && !wasCPressed) {
-                java.util.Set<ChatMessage> selected = activeTab.getSelectedMessages();
+                java.util.Set<com.bame.secondchat.data.SelectedLine> selected = activeTab.getSelectedLines();
                 if (!selected.isEmpty()) {
-                    java.util.List<ChatMessage> orderedSelection = new java.util.ArrayList<>();
-                    for (ChatMessage msg : activeTab.getMessages()) {
-                        if (selected.contains(msg)) {
-                            orderedSelection.add(msg);
-                        }
-                    }
                     StringBuilder sb = new StringBuilder();
-                    for (ChatMessage msg : orderedSelection) {
-                        sb.append(msg.getMessage().getString()).append("\n");
+                    for (ChatMessage msg : activeTab.getMessages()) {
+                        java.util.List<net.minecraft.text.OrderedText> wrapped = client.textRenderer.wrapLines(msg.getMessage(), activeTab.getWidth() - 8);
+                        for (int l = 0; l < wrapped.size(); l++) {
+                            com.bame.secondchat.data.SelectedLine sl = new com.bame.secondchat.data.SelectedLine(msg, l);
+                            if (selected.contains(sl)) {
+                                StringBuilder lineStr = new StringBuilder();
+                                wrapped.get(l).accept((index, style, codePoint) -> {
+                                    lineStr.append(new String(Character.toChars(codePoint)));
+                                    return true;
+                                });
+                                sb.append(lineStr.toString()).append("\n");
+                            }
+                        }
                     }
                     client.keyboard.setClipboard(sb.toString().trim());
                     activeTab.clearSelection();
@@ -106,6 +115,8 @@ public class CustomChatHud {
         
         boolean isRightClickHeld = org.lwjgl.glfw.GLFW.glfwGetMouseButton(client.getWindow().getHandle(), org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_2) == org.lwjgl.glfw.GLFW.GLFW_PRESS;
         
+        int selectionColor = com.bame.secondchat.config.GlobalConfig.getInstance().parseSelectionColor();
+        
         // Iterate backwards from newestVisibleIndex to oldest
         for (int i = newestVisibleIndex; i >= 0; i--) {
             if (linesDrawn >= maxLines) break;
@@ -118,22 +129,7 @@ public class CustomChatHud {
                 continue;
             }
             
-            List<net.minecraft.text.OrderedText> wrappedLines = client.textRenderer.wrapLines(msg.getMessage(), width - 4);
-            
-            // Calculate total height of this message block
-            int messageBlockHeight = wrappedLines.size() * lineHeight;
-            int messageBottomY = startY + height - (linesDrawn * lineHeight);
-            int messageTopY = messageBottomY - messageBlockHeight;
-            
-            boolean isHovered = chatOpen && (mouseX >= x && mouseX <= x + width && mouseY >= Math.max(startY, messageTopY) && mouseY < Math.min(startY + height, messageBottomY));
-            if (isHovered) {
-                hoveredMessage = msg;
-                if (isRightClickHeld) {
-                    activeTab.getSelectedMessages().add(msg);
-                }
-            }
-            
-            boolean isSelected = activeTab.getSelectedMessages().contains(msg);
+            List<net.minecraft.text.OrderedText> wrappedLines = client.textRenderer.wrapLines(msg.getMessage(), width - 8);
             
             double alpha = 1.0;
             if (shouldFade) {
@@ -150,10 +146,20 @@ public class CustomChatHud {
                 if (linesDrawn >= maxLines) break;
                 
                 int renderY = startY + height - ((linesDrawn + 1) * lineHeight);
+                boolean isLineHovered = chatOpen && mouseX >= x && mouseX <= x + width && mouseY >= renderY && mouseY < renderY + lineHeight;
+                
+                if (isLineHovered) {
+                    hoveredMessage = msg;
+                    if (isRightClickHeld) {
+                        activeTab.getSelectedLines().add(new com.bame.secondchat.data.SelectedLine(msg, l));
+                    }
+                }
+                
+                boolean isSelected = activeTab.isSelected(msg, l);
                 
                 if (isSelected) {
-                    drawContext.fill(x, renderY, x + width, renderY + lineHeight, 0x880000FF);
-                } else if (isHovered) {
+                    drawContext.fill(x, renderY, x + width, renderY + lineHeight, selectionColor);
+                } else if (isLineHovered) {
                     drawContext.fill(x, renderY, x + width, renderY + lineHeight, 0x55AAAAAA);
                 }
                 
@@ -188,9 +194,24 @@ public class CustomChatHud {
         drawContext.disableScissor();
         
         if (hoveredMessage != null) {
-            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd.MM.yyyy HH:mm 'Uhr'");
-            String dateString = sdf.format(new java.util.Date(hoveredMessage.getTimestamp()));
-            drawContext.drawTooltip(client.textRenderer, net.minecraft.text.Text.of(dateString), (int)mouseX, (int)mouseY);
+            try {
+                String pattern = com.bame.secondchat.config.GlobalConfig.getInstance().timestampFormat;
+                if (pattern == null || pattern.trim().isEmpty()) {
+                    pattern = "dd.MM.yyyy HH:mm 'Uhr'";
+                }
+                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat(pattern);
+                String dateString = sdf.format(new java.util.Date(hoveredMessage.getTimestamp()));
+                
+                // Add color if configured
+                String colorPrefix = com.bame.secondchat.config.GlobalConfig.getInstance().timestampColor;
+                if (colorPrefix != null && colorPrefix.startsWith("§")) {
+                    dateString = colorPrefix + dateString;
+                }
+                
+                drawContext.drawTooltip(client.textRenderer, net.minecraft.text.Text.literal(dateString), (int)mouseX, (int)mouseY);
+            } catch (Exception e) {
+                drawContext.drawTooltip(client.textRenderer, net.minecraft.text.Text.literal("Invalid Date Format"), (int)mouseX, (int)mouseY);
+            }
         }
     }
 }

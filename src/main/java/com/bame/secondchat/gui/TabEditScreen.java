@@ -100,6 +100,18 @@ public class TabEditScreen extends Screen {
             this.addDrawableChild(deleteButton);
             startY += 30;
         }
+        
+        // Clear Chat Button (only if not new)
+        if (!isNew) {
+            ButtonWidget clearChatButton = ButtonWidget.builder(Text.literal("Clear Chat").withColor(0xFFFFAA00), button -> {
+                this.tab.clearMessages();
+                if (this.client != null) {
+                    this.client.setScreen(this.parent);
+                }
+            }).dimensions(centerX - 100, startY, 200, 20).build();
+            this.addDrawableChild(clearChatButton);
+            startY += 30;
+        }
 
         // Save & Cancel Buttons
         ButtonWidget saveButton = ButtonWidget.builder(Text.literal("Save"), button -> {

@@ -23,8 +23,8 @@ public class ChatTab {
     // Unread message count
     private transient int unreadCount = 0;
     
-    // Selected messages for screenshot feature
-    private transient java.util.Set<ChatMessage> selectedMessages = new java.util.HashSet<>();
+    // Selected lines for screenshot feature
+    private transient java.util.Set<SelectedLine> selectedLines = new java.util.HashSet<>();
 
     public ChatTab(String name, boolean hideFromAll) {
         this.name = name;
@@ -117,9 +117,13 @@ public class ChatTab {
             this.messages = new ArrayList<>();
         }
         this.messages.add(message);
-        // Trim history to prevent memory issues
-        if (this.messages.size() > 500) {
-            this.messages.remove(0);
+        
+        int max = com.bame.secondchat.config.GlobalConfig.getInstance().maxMessages;
+        if (max > 0) {
+            while (this.messages.size() > max) {
+                ChatMessage removed = this.messages.remove(0);
+                getSelectedLines().removeIf(sl -> sl.getMessage() == removed);
+            }
         }
     }
     
@@ -136,7 +140,8 @@ public class ChatTab {
     }
     
     public void clearMessages() {
-        this.messages.clear();
+        if (this.messages != null) this.messages.clear();
+        getSelectedLines().clear();
     }
     
     public double getScrollOffset() {
@@ -147,22 +152,27 @@ public class ChatTab {
         this.scrollOffset = scrollOffset;
     }
     
-    public java.util.Set<ChatMessage> getSelectedMessages() {
-        if (this.selectedMessages == null) {
-            this.selectedMessages = new java.util.HashSet<>();
+    public java.util.Set<SelectedLine> getSelectedLines() {
+        if (this.selectedLines == null) {
+            this.selectedLines = new java.util.HashSet<>();
         }
-        return this.selectedMessages;
+        return this.selectedLines;
     }
     
-    public void toggleSelection(ChatMessage message) {
-        if (getSelectedMessages().contains(message)) {
-            getSelectedMessages().remove(message);
+    public void toggleSelection(ChatMessage msg, int lineIndex) {
+        SelectedLine sl = new SelectedLine(msg, lineIndex);
+        if (getSelectedLines().contains(sl)) {
+            getSelectedLines().remove(sl);
         } else {
-            getSelectedMessages().add(message);
+            getSelectedLines().add(sl);
         }
+    }
+    
+    public boolean isSelected(ChatMessage msg, int lineIndex) {
+        return getSelectedLines().contains(new SelectedLine(msg, lineIndex));
     }
     
     public void clearSelection() {
-        getSelectedMessages().clear();
+        getSelectedLines().clear();
     }
 }

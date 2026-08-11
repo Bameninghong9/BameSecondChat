@@ -127,16 +127,28 @@ public class ChatScreenMixin {
                     
                     if (linesFromBottom >= 0 && linesFromBottom < maxLines) {
                         int scrollLines = (int) activeTab.getScrollOffset();
-                        int newestVisibleIndex = activeTab.getMessages().size() - 1 - scrollLines;
-                        if (newestVisibleIndex >= activeTab.getMessages().size()) newestVisibleIndex = activeTab.getMessages().size() - 1;
-                        if (newestVisibleIndex < 0) newestVisibleIndex = 0;
+                        int targetVisibleLine = linesFromBottom; // 0 = bottom
                         
-                        int clickedIndex = newestVisibleIndex - linesFromBottom;
-                        if (clickedIndex >= 0 && clickedIndex <= newestVisibleIndex && clickedIndex < activeTab.getMessages().size()) {
-                            com.bame.secondchat.data.ChatMessage clickedMsg = activeTab.getMessages().get(clickedIndex);
-                            activeTab.toggleSelection(clickedMsg);
-                            cir.setReturnValue(true);
-                            return;
+                        int currentVisibleLine = 0;
+                        int skippedLines = 0;
+                        
+                        for (int i = activeTab.getMessages().size() - 1; i >= 0; i--) {
+                            com.bame.secondchat.data.ChatMessage msg = activeTab.getMessages().get(i);
+                            java.util.List<net.minecraft.text.OrderedText> wrapped = client.textRenderer.wrapLines(msg.getMessage(), chatWidth - 8);
+                            
+                            for (int l = wrapped.size() - 1; l >= 0; l--) {
+                                if (skippedLines < scrollLines) {
+                                    skippedLines++;
+                                    continue;
+                                }
+                                
+                                if (currentVisibleLine == targetVisibleLine) {
+                                    activeTab.toggleSelection(msg, l);
+                                    cir.setReturnValue(true);
+                                    return;
+                                }
+                                currentVisibleLine++;
+                            }
                         }
                     }
                 }
