@@ -109,6 +109,7 @@ public class CustomChatHud {
         drawContext.enableScissor(x, startY, x + width, startY + height);
         
         ChatMessage hoveredMessage = null;
+        net.minecraft.text.Style hoveredStyle = null;
         int linesDrawn = 0;
         int currentTick = client.inGameHud.getTicks();
         
@@ -152,6 +153,24 @@ public class CustomChatHud {
                     if (isRightClickHeld) {
                         tab.getSelectedLines().add(new com.bame.secondchat.data.SelectedLine(msg, l));
                     }
+                    
+                    final int targetX = (int)(mouseX - (x + 2));
+                    final int[] currentX = {0};
+                    final net.minecraft.text.Style[] foundStyle = {null};
+                    
+                    wrappedLines.get(l).accept((index, style, codePoint) -> {
+                        int charWidth = client.textRenderer.getWidth(new String(Character.toChars(codePoint)));
+                        currentX[0] += charWidth;
+                        if (currentX[0] > targetX && foundStyle[0] == null) {
+                            foundStyle[0] = style;
+                            return false;
+                        }
+                        return true;
+                    });
+                    
+                    if (foundStyle[0] != null) {
+                        hoveredStyle = foundStyle[0];
+                    }
                 }
                 
                 boolean isSelected = tab.isSelected(msg, l);
@@ -192,7 +211,9 @@ public class CustomChatHud {
         
         drawContext.disableScissor();
         
-        if (hoveredMessage != null) {
+        if (hoveredStyle != null && hoveredStyle.getHoverEvent() != null) {
+            drawContext.drawHoverEvent(client.textRenderer, hoveredStyle, (int)mouseX, (int)mouseY);
+        } else if (hoveredMessage != null) {
             try {
                 String pattern = com.bame.secondchat.config.GlobalConfig.getInstance().timestampFormat;
                 if (pattern == null || pattern.trim().isEmpty()) {
