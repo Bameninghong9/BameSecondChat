@@ -204,11 +204,24 @@ public class CustomChatHud {
                 
                 // Add color if configured
                 String colorPrefix = com.bame.secondchat.config.GlobalConfig.getInstance().timestampColor;
-                if (colorPrefix != null && colorPrefix.startsWith("§")) {
-                    dateString = colorPrefix + dateString;
+                net.minecraft.text.MutableText text = net.minecraft.text.Text.literal(dateString);
+                if (colorPrefix != null && !colorPrefix.trim().isEmpty()) {
+                    if (colorPrefix.startsWith("§")) {
+                        text = net.minecraft.text.Text.literal(colorPrefix + dateString);
+                    } else if (colorPrefix.startsWith("#")) {
+                        try {
+                            int colorInt = Integer.parseUnsignedInt(colorPrefix.substring(1), 16);
+                            // If it's a 6-character hex, add full alpha
+                            if (colorPrefix.length() == 7) {
+                                colorInt = 0xFF000000 | colorInt;
+                            }
+                            text = text.fillStyle(net.minecraft.text.Style.EMPTY.withColor(colorInt & 0xFFFFFF));
+                        } catch (Exception ignored) {
+                        }
+                    }
                 }
                 
-                drawContext.drawTooltip(client.textRenderer, net.minecraft.text.Text.literal(dateString), (int)mouseX, (int)mouseY);
+                drawContext.drawTooltip(client.textRenderer, text, (int)mouseX, (int)mouseY);
             } catch (Exception e) {
                 drawContext.drawTooltip(client.textRenderer, net.minecraft.text.Text.literal("Invalid Date Format"), (int)mouseX, (int)mouseY);
             }

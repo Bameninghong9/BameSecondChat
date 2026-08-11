@@ -18,6 +18,9 @@ public class GlobalSettingsScreen extends Screen {
     private TextFieldWidget timestampColorField;
     private TextFieldWidget selectionColorField;
     
+    private ButtonWidget timestampColorResetButton;
+    private ButtonWidget selectionColorResetButton;
+    
     private ButtonWidget saveButton;
 
     public GlobalSettingsScreen(Screen parent) {
@@ -59,6 +62,16 @@ public class GlobalSettingsScreen extends Screen {
         this.selectionColorField.setText(config.selectionColor);
         this.addDrawableChild(this.selectionColorField);
         
+        this.timestampColorResetButton = ButtonWidget.builder(Text.literal("Reset"), button -> {
+            this.timestampColorField.setText("§7");
+        }).dimensions(xOffset + fieldWidth + 5, startY + 60, 50, 20).build();
+        this.addDrawableChild(this.timestampColorResetButton);
+        
+        this.selectionColorResetButton = ButtonWidget.builder(Text.literal("Reset"), button -> {
+            this.selectionColorField.setText("#880000FF");
+        }).dimensions(xOffset + fieldWidth + 5, startY + 90, 50, 20).build();
+        this.addDrawableChild(this.selectionColorResetButton);
+        
         this.saveButton = ButtonWidget.builder(Text.literal("Save & Close"), button -> {
             saveSettings();
             this.client.setScreen(this.parent);
@@ -79,6 +92,32 @@ public class GlobalSettingsScreen extends Screen {
         config.selectionColor = this.selectionColorField.getText();
         
         GlobalConfig.save();
+    }
+
+    private int parseColorForPreview(String colorStr) {
+        if (colorStr == null || colorStr.trim().isEmpty()) return 0xFF000000;
+        if (colorStr.startsWith("§")) {
+            // Very basic mapping for legacy codes
+            char c = colorStr.length() > 1 ? colorStr.charAt(1) : 'f';
+            return switch (c) {
+                case '0' -> 0xFF000000; case '1' -> 0xFF0000AA; case '2' -> 0xFF00AA00; case '3' -> 0xFF00AAAA;
+                case '4' -> 0xFFAA0000; case '5' -> 0xFFAA00AA; case '6' -> 0xFFFFAA00; case '7' -> 0xFFAAAAAA;
+                case '8' -> 0xFF555555; case '9' -> 0xFF5555FF; case 'a' -> 0xFF55FF55; case 'b' -> 0xFF55FFFF;
+                case 'c' -> 0xFFFF5555; case 'd' -> 0xFFFF55FF; case 'e' -> 0xFFFFFF55; case 'f' -> 0xFFFFFFFF;
+                default -> 0xFFFFFFFF;
+            };
+        }
+        if (colorStr.startsWith("#")) {
+            try {
+                long val = Long.parseLong(colorStr.substring(1), 16);
+                if (colorStr.length() == 7) { // #RRGGBB
+                    return (int) (0xFF000000 | val);
+                } else if (colorStr.length() == 9) { // #AARRGGBB
+                    return (int) val;
+                }
+            } catch (Exception ignored) {}
+        }
+        return 0xFF000000;
     }
 
     @Override
@@ -105,6 +144,9 @@ public class GlobalSettingsScreen extends Screen {
         this.timestampColorField.visible = showTsColor;
         this.selectionColorField.visible = showSelColor;
         
+        this.timestampColorResetButton.visible = showTsColor;
+        this.selectionColorResetButton.visible = showSelColor;
+        
         int currentY = startY;
         
         if (showMaxMsg) {
@@ -122,12 +164,24 @@ public class GlobalSettingsScreen extends Screen {
         if (showTsColor) {
             context.drawTextWithShadow(this.textRenderer, Text.literal("Timestamp Color"), xOffset, currentY - 10, 0xFFAAAAAA);
             this.timestampColorField.setY(currentY);
+            this.timestampColorResetButton.setY(currentY);
+            
+            int color = parseColorForPreview(this.timestampColorField.getText());
+            context.fill(xOffset - 26, currentY - 1, xOffset - 4, currentY + 21, 0xFFFFFFFF);
+            context.fill(xOffset - 25, currentY, xOffset - 5, currentY + 20, color);
+            
             currentY += 40;
         }
         
         if (showSelColor) {
             context.drawTextWithShadow(this.textRenderer, Text.literal("Selection Color (Hex)"), xOffset, currentY - 10, 0xFFAAAAAA);
             this.selectionColorField.setY(currentY);
+            this.selectionColorResetButton.setY(currentY);
+            
+            int color = parseColorForPreview(this.selectionColorField.getText());
+            context.fill(xOffset - 26, currentY - 1, xOffset - 4, currentY + 21, 0xFFFFFFFF);
+            context.fill(xOffset - 25, currentY, xOffset - 5, currentY + 20, color);
+            
             currentY += 40;
         }
         
