@@ -7,7 +7,8 @@ public class TabManager {
     private static final TabManager INSTANCE = new TabManager();
     
     private final List<ChatTab> tabs = new ArrayList<>();
-    private ChatTab activeTab;
+    private boolean isAllTabOpen = true;
+    private ChatTab activeCustomTab = null;
     private final ChatTab allTab;
 
     // Global positions for the Custom Chat HUD
@@ -17,7 +18,6 @@ public class TabManager {
     private TabManager() {
         allTab = new ChatTab("All", false);
         tabs.add(allTab);
-        activeTab = allTab;
     }
 
     public static TabManager getInstance() {
@@ -29,14 +29,33 @@ public class TabManager {
     }
 
     public ChatTab getActiveTab() {
-        return activeTab;
+        return activeCustomTab;
     }
 
     public void setActiveTab(ChatTab tab) {
-        this.activeTab = tab;
-        if (tab != null) {
-            tab.resetUnread();
+        if (tab == allTab) {
+            isAllTabOpen = !isAllTabOpen;
+            if (isAllTabOpen) {
+                allTab.resetUnread();
+            }
+        } else {
+            if (this.activeCustomTab == tab) {
+                this.activeCustomTab = null;
+            } else {
+                this.activeCustomTab = tab;
+                if (tab != null) {
+                    tab.resetUnread();
+                }
+            }
         }
+    }
+    
+    public boolean isAllTabOpen() {
+        return isAllTabOpen;
+    }
+    
+    public ChatTab getActiveCustomTab() {
+        return activeCustomTab;
     }
 
     public ChatTab getAllTab() {
@@ -52,8 +71,8 @@ public class TabManager {
     public void removeTab(ChatTab tab) {
         if (tab != allTab) {
             tabs.remove(tab);
-            if (activeTab == tab) {
-                activeTab = allTab;
+            if (activeCustomTab == tab) {
+                activeCustomTab = null;
             }
         }
     }
@@ -82,7 +101,7 @@ public class TabManager {
 
             if (matches) {
                 tab.addMessage(message);
-                if (tab != activeTab) {
+                if (tab != activeCustomTab) {
                     tab.incrementUnread();
                 }
                 if (tab.isHideFromAll()) {
@@ -94,7 +113,7 @@ public class TabManager {
 
         if (addToAll) {
             allTab.addMessage(message);
-            if (allTab != activeTab) {
+            if (!isAllTabOpen) {
                 allTab.incrementUnread();
             }
         }
@@ -120,7 +139,8 @@ public class TabManager {
             }
         }
         
-        activeTab = allTab;
+        isAllTabOpen = true;
+        activeCustomTab = null;
     }
 
     public void updateTab(ChatTab tab, String newName, boolean hideFromAll, List<FilterRule> newRules) {

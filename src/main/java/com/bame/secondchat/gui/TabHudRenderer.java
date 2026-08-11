@@ -20,9 +20,13 @@ public class TabHudRenderer implements HudRenderCallback {
         
         handleDragging(client);
         
-        ChatTab activeTab = TabManager.getInstance().getActiveTab();
-        if (activeTab != null) {
-            customChatHud.render(drawContext, tickCounter);
+        if (TabManager.getInstance().isAllTabOpen()) {
+            customChatHud.render(drawContext, tickCounter, TabManager.getInstance().getAllTab());
+        }
+        
+        ChatTab activeCustomTab = TabManager.getInstance().getActiveCustomTab();
+        if (activeCustomTab != null) {
+            customChatHud.render(drawContext, tickCounter, activeCustomTab);
         }
         
         renderTabBar(drawContext);
@@ -137,7 +141,9 @@ public class TabHudRenderer implements HudRenderCallback {
             int xOffset = tab.getX();
             int yOffset = tab.getY();
             
-            boolean isActive = (tab == activeTab);
+            boolean isActive = (tab == TabManager.getInstance().getAllTab()) ? 
+                                TabManager.getInstance().isAllTabOpen() : 
+                                (tab == TabManager.getInstance().getActiveCustomTab());
             
             // Aktiver Tab Hintergrund: Helles Grau/Blau mit hoher Deckkraft. Inaktiv: Schwarz transparent
             int bgColor = isActive ? 0xCC202040 : 0x88000000;
@@ -179,18 +185,26 @@ public class TabHudRenderer implements HudRenderCallback {
         drawContext.fill(plusX, plusY, plusX + plusWidth, plusY + 14, 0x88005500); // Greenish background
         drawContext.drawText(client.textRenderer, "+", plusX + 6, plusY + 3, 0xFFFFFFFF, true);
         
-        // Render resize handle for active tab if custom chat is open
-        if (activeTab != null && client.currentScreen instanceof net.minecraft.client.gui.screen.ChatScreen) {
-            int chatX = activeTab.getX();
-            int chatY = activeTab.getY() + 18;
-            int chatWidth = activeTab.getWidth();
-            int chatHeight = activeTab.getHeight();
-            
-            // Draw small triangle in bottom right
-            drawContext.fill(chatX + chatWidth - 8, chatY + chatHeight - 2, chatX + chatWidth, chatY + chatHeight, 0xAAFFFFFF);
-            drawContext.fill(chatX + chatWidth - 2, chatY + chatHeight - 8, chatX + chatWidth, chatY + chatHeight, 0xAAFFFFFF);
-            drawContext.fill(chatX + chatWidth - 6, chatY + chatHeight - 4, chatX + chatWidth, chatY + chatHeight, 0xAAFFFFFF);
-            drawContext.fill(chatX + chatWidth - 4, chatY + chatHeight - 6, chatX + chatWidth, chatY + chatHeight, 0xAAFFFFFF);
+        if (TabManager.getInstance().isAllTabOpen() && client.currentScreen instanceof net.minecraft.client.gui.screen.ChatScreen) {
+            drawResizeHandle(drawContext, TabManager.getInstance().getAllTab());
         }
+        
+        ChatTab activeCustomTab = TabManager.getInstance().getActiveCustomTab();
+        if (activeCustomTab != null && client.currentScreen instanceof net.minecraft.client.gui.screen.ChatScreen) {
+            drawResizeHandle(drawContext, activeCustomTab);
+        }
+    }
+    
+    private void drawResizeHandle(DrawContext drawContext, ChatTab tab) {
+        int chatX = tab.getX();
+        int chatY = tab.getY() + 18;
+        int chatWidth = tab.getWidth();
+        int chatHeight = tab.getHeight();
+        
+        // Draw small triangle in bottom right
+        drawContext.fill(chatX + chatWidth - 8, chatY + chatHeight - 2, chatX + chatWidth, chatY + chatHeight, 0xAAFFFFFF);
+        drawContext.fill(chatX + chatWidth - 2, chatY + chatHeight - 8, chatX + chatWidth, chatY + chatHeight, 0xAAFFFFFF);
+        drawContext.fill(chatX + chatWidth - 6, chatY + chatHeight - 4, chatX + chatWidth, chatY + chatHeight, 0xAAFFFFFF);
+        drawContext.fill(chatX + chatWidth - 4, chatY + chatHeight - 6, chatX + chatWidth, chatY + chatHeight, 0xAAFFFFFF);
     }
 }

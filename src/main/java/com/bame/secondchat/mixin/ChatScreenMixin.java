@@ -23,8 +23,10 @@ public class ChatScreenMixin {
         double mouseY = click.y();
         int button = click.button();
         
-        ChatTab activeTab = TabManager.getInstance().getActiveTab();
         List<ChatTab> tabs = TabManager.getInstance().getTabs();
+        ChatTab allTab = TabManager.getInstance().getAllTab();
+        ChatTab activeCustomTab = TabManager.getInstance().getActiveCustomTab();
+        boolean isAllTabOpen = TabManager.getInstance().isAllTabOpen();
         
         MinecraftClient client = MinecraftClient.getInstance();
         int screenHeight = client.getWindow().getScaledHeight();
@@ -41,11 +43,7 @@ public class ChatScreenMixin {
             
             if (mouseX >= tabX && mouseX <= tabX + width && mouseY >= tabY && mouseY <= tabY + height) {
                 if (button == 0) { // Left click
-                    if (activeTab == tab) {
-                        TabManager.getInstance().setActiveTab(null);
-                    } else {
-                        TabManager.getInstance().setActiveTab(tab);
-                    }
+                    TabManager.getInstance().setActiveTab(tab);
                     
                     // Start dragging this individual tab
                     DragState.isDraggingTab = true;
@@ -67,8 +65,14 @@ public class ChatScreenMixin {
             }
         }
         
-        // 1.5 Check if clicking on bottom-right corner of active tab to resize
-        if (activeTab != null && activeTab.getName() != null) {
+        // Let's create a list of open tabs to check clicks inside them.
+        // We add activeCustomTab first, then allTab, so custom tab has priority if they overlap.
+        java.util.List<ChatTab> openTabs = new java.util.ArrayList<>();
+        if (activeCustomTab != null) openTabs.add(activeCustomTab);
+        if (isAllTabOpen) openTabs.add(allTab);
+        
+        for (ChatTab activeTab : openTabs) {
+            // 1.5 Check if clicking on bottom-right corner of active tab to resize
             int resizeBoxSize = 10;
             int chatX = activeTab.getX();
             int chatY = activeTab.getY() + 18;
@@ -88,15 +92,8 @@ public class ChatScreenMixin {
                     return;
                 }
             }
-        }
-        
-        // 1.7 Check if clicking inside the chat box to select a message
-        if (activeTab != null) { 
-            int chatX = activeTab.getX();
-            int chatY = activeTab.getY() + 18;
-            int chatWidth = activeTab.getWidth();
-            int chatHeight = activeTab.getHeight();
             
+            // 1.7 Check if clicking inside the chat box to select a message
             if (mouseX >= chatX && mouseX <= chatX + chatWidth &&
                 mouseY >= chatY && mouseY <= chatY + chatHeight) {
                 
@@ -112,8 +109,6 @@ public class ChatScreenMixin {
                 
                 if (button == 0) { // Left click in chat bounds
                     activeTab.clearSelection();
-                    // Don't cancel return value so links can still be clicked by Vanilla if we ever support it, 
-                    // or just return true. Let's return true since it's our custom window area.
                     cir.setReturnValue(true);
                     return;
                 }
@@ -156,7 +151,6 @@ public class ChatScreenMixin {
         }
         
         // 2. Check if clicked on the "+" button (anchored to "All" tab)
-        ChatTab allTab = TabManager.getInstance().getAllTab();
         int allWidth = client.textRenderer.getWidth("All") + 12;
         if (allTab.getUnreadCount() > 0) {
             allWidth += client.textRenderer.getWidth(String.valueOf(allTab.getUnreadCount())) + 6;
@@ -188,9 +182,15 @@ public class ChatScreenMixin {
     
     @Inject(method = "mouseScrolled", at = @At("HEAD"), cancellable = true)
     private void onMouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount, CallbackInfoReturnable<Boolean> cir) {
-        ChatTab activeTab = TabManager.getInstance().getActiveTab();
-        MinecraftClient client = MinecraftClient.getInstance();
-        if (activeTab != null && activeTab.getName() != null) {
+        ChatTab allTab = TabManager.getInstance().getAllTab();
+        ChatTab activeCustomTab = TabManager.getInstance().getActiveCustomTab();
+        boolean isAllTabOpen = TabManager.getInstance().isAllTabOpen();
+        
+        java.util.List<ChatTab> openTabs = new java.util.ArrayList<>();
+        if (activeCustomTab != null) openTabs.add(activeCustomTab);
+        if (isAllTabOpen) openTabs.add(allTab);
+        
+        for (ChatTab activeTab : openTabs) {
             int chatX = activeTab.getX();
             int chatY = activeTab.getY() + 18;
             int chatWidth = activeTab.getWidth();
@@ -210,6 +210,7 @@ public class ChatScreenMixin {
                 
                 activeTab.setScrollOffset(currentScroll);
                 cir.setReturnValue(true);
+                return;
             }
         }
     }

@@ -14,9 +14,8 @@ public class CustomChatHud {
     private static boolean wasSPressed = false;
     private static boolean wasCPressed = false;
 
-    public void render(DrawContext drawContext, RenderTickCounter tickCounter) {
-        ChatTab activeTab = TabManager.getInstance().getActiveTab();
-        if (activeTab == null) return;
+    public void render(DrawContext drawContext, RenderTickCounter tickCounter, ChatTab tab) {
+        if (tab == null) return;
         
         MinecraftClient client = MinecraftClient.getInstance();
         boolean chatOpen = client.currentScreen instanceof net.minecraft.client.gui.screen.ChatScreen;
@@ -31,11 +30,11 @@ public class CustomChatHud {
                                     org.lwjgl.glfw.GLFW.glfwGetKey(client.getWindow().getHandle(), org.lwjgl.glfw.GLFW.GLFW_KEY_RIGHT_CONTROL) == org.lwjgl.glfw.GLFW.GLFW_PRESS;
             
             if (isSPressed && isCtrlPressed && !wasSPressed) {
-                java.util.Set<com.bame.secondchat.data.SelectedLine> selected = activeTab.getSelectedLines();
+                java.util.Set<com.bame.secondchat.data.SelectedLine> selected = tab.getSelectedLines();
                 if (!selected.isEmpty()) {
                     java.util.List<com.bame.secondchat.data.SelectedLine> orderedSelection = new java.util.ArrayList<>();
-                    for (ChatMessage msg : activeTab.getMessages()) {
-                        java.util.List<net.minecraft.text.OrderedText> wrapped = client.textRenderer.wrapLines(msg.getRenderedMessage(), activeTab.getWidth() - 8);
+                    for (ChatMessage msg : tab.getMessages()) {
+                        java.util.List<net.minecraft.text.OrderedText> wrapped = client.textRenderer.wrapLines(msg.getRenderedMessage(), tab.getWidth() - 8);
                         for (int l = 0; l < wrapped.size(); l++) {
                             com.bame.secondchat.data.SelectedLine sl = new com.bame.secondchat.data.SelectedLine(msg, l);
                             if (selected.contains(sl)) {
@@ -43,17 +42,17 @@ public class CustomChatHud {
                             }
                         }
                     }
-                    com.bame.secondchat.util.ClipboardImageUtil.copyMessagesToClipboard(orderedSelection, activeTab.getWidth());
-                    activeTab.clearSelection();
+                    com.bame.secondchat.util.ClipboardImageUtil.copyMessagesToClipboard(orderedSelection, tab.getWidth());
+                    tab.clearSelection();
                 }
             }
             
             if (isCPressed && isCtrlPressed && !wasCPressed) {
-                java.util.Set<com.bame.secondchat.data.SelectedLine> selected = activeTab.getSelectedLines();
+                java.util.Set<com.bame.secondchat.data.SelectedLine> selected = tab.getSelectedLines();
                 if (!selected.isEmpty()) {
                     StringBuilder sb = new StringBuilder();
-                    for (ChatMessage msg : activeTab.getMessages()) {
-                        java.util.List<net.minecraft.text.OrderedText> wrapped = client.textRenderer.wrapLines(msg.getRenderedMessage(), activeTab.getWidth() - 8);
+                    for (ChatMessage msg : tab.getMessages()) {
+                        java.util.List<net.minecraft.text.OrderedText> wrapped = client.textRenderer.wrapLines(msg.getRenderedMessage(), tab.getWidth() - 8);
                         for (int l = 0; l < wrapped.size(); l++) {
                             com.bame.secondchat.data.SelectedLine sl = new com.bame.secondchat.data.SelectedLine(msg, l);
                             if (selected.contains(sl)) {
@@ -67,7 +66,7 @@ public class CustomChatHud {
                         }
                     }
                     client.keyboard.setClipboard(sb.toString().trim());
-                    activeTab.clearSelection();
+                    tab.clearSelection();
                 }
             }
             
@@ -75,17 +74,17 @@ public class CustomChatHud {
             wasCPressed = isCPressed;
         }
 
-        List<ChatMessage> messages = activeTab.getMessages();
+        List<ChatMessage> messages = tab.getMessages();
         if (messages.isEmpty()) return;
         
-        int x = activeTab.getX();
-        int y = activeTab.getY();
-        int width = activeTab.getWidth();
-        int height = activeTab.getHeight();
+        int x = tab.getX();
+        int y = tab.getY();
+        int width = tab.getWidth();
+        int height = tab.getHeight();
         
         int startY = y + 18;
         
-        int scrollLines = (int) activeTab.getScrollOffset();
+        int scrollLines = (int) tab.getScrollOffset();
         int newestVisibleIndex = messages.size() - 1 - scrollLines;
         if (newestVisibleIndex >= messages.size()) {
             newestVisibleIndex = messages.size() - 1;
@@ -95,7 +94,7 @@ public class CustomChatHud {
         int lineHeight = 12;
         int maxLines = height / lineHeight;
         
-        boolean isAllTab = "All".equals(activeTab.getName());
+        boolean isAllTab = "All".equals(tab.getName());
         boolean shouldFade = !chatOpen && isAllTab;
 
         if (shouldFade) {
@@ -151,11 +150,11 @@ public class CustomChatHud {
                 if (isLineHovered) {
                     hoveredMessage = msg;
                     if (isRightClickHeld) {
-                        activeTab.getSelectedLines().add(new com.bame.secondchat.data.SelectedLine(msg, l));
+                        tab.getSelectedLines().add(new com.bame.secondchat.data.SelectedLine(msg, l));
                     }
                 }
                 
-                boolean isSelected = activeTab.isSelected(msg, l);
+                boolean isSelected = tab.isSelected(msg, l);
                 
                 if (isSelected) {
                     drawContext.fill(x, renderY, x + width, renderY + lineHeight, selectionColor);
