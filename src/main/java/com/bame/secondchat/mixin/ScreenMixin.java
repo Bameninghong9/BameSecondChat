@@ -19,19 +19,7 @@ public interface ScreenMixin {
     default void onMouseDragged(Click click, double deltaX, double deltaY, CallbackInfoReturnable<Boolean> cir) {
         if (!((Object) this instanceof ChatScreen)) return;
         
-        double mouseX = click.x();
-        double mouseY = click.y();
-
         if (DragState.isDraggingTab) {
-            int dx = (int)(mouseX - DragState.startMouseX);
-            int dy = (int)(mouseY - DragState.startMouseY);
-            
-            int newX = DragState.startTabX + dx;
-            int newY = DragState.startTabY + dy;
-            
-            TabManager.getInstance().setHudX(newX);
-            TabManager.getInstance().setHudY(newY);
-            
             cir.setReturnValue(true);
         }
     }

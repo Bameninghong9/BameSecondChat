@@ -86,37 +86,87 @@ public class CustomChatHud {
         int lineHeight = 12;
         int maxLines = height / lineHeight;
         
+        boolean isAllTab = "All".equals(activeTab.getName());
+        boolean shouldFade = !chatOpen && isAllTab;
+
+        if (shouldFade) {
+            maxLines = Math.min(maxLines, 11);
+        }
+
         int bg = 0x66000000;
-        drawContext.fill(x, startY, x + width, startY + height, bg);
+        if (!shouldFade) {
+            drawContext.fill(x, startY, x + width, startY + height, bg);
+        }
         
         drawContext.enableScissor(x, startY, x + width, startY + height);
         
         ChatMessage hoveredMessage = null;
         int linesDrawn = 0;
+        int currentTick = client.inGameHud.getTicks();
+        
+        boolean isRightClickHeld = org.lwjgl.glfw.GLFW.glfwGetMouseButton(client.getWindow().getHandle(), org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_2) == org.lwjgl.glfw.GLFW.GLFW_PRESS;
+        
         // Iterate backwards from newestVisibleIndex to oldest
         for (int i = newestVisibleIndex; i >= 0; i--) {
             if (linesDrawn >= maxLines) break;
             
             ChatMessage msg = messages.get(i);
             
-            // Render newest at the bottom of the box
-            int renderY = startY + height - ((linesDrawn + 1) * lineHeight);
+            int age = currentTick - msg.getCreationTick();
+            if (shouldFade && age > 200) {
+                // Skip rendering this message if it's too old and we are fading
+                continue;
+            }
             
-            boolean isHovered = chatOpen && (mouseX >= x && mouseX <= x + width && mouseY >= renderY && mouseY < renderY + lineHeight);
+            List<net.minecraft.text.OrderedText> wrappedLines = client.textRenderer.wrapLines(msg.getMessage(), width - 4);
+            
+            // Calculate total height of this message block
+            int messageBlockHeight = wrappedLines.size() * lineHeight;
+            int messageBottomY = startY + height - (linesDrawn * lineHeight);
+            int messageTopY = messageBottomY - messageBlockHeight;
+            
+            boolean isHovered = chatOpen && (mouseX >= x && mouseX <= x + width && mouseY >= Math.max(startY, messageTopY) && mouseY < Math.min(startY + height, messageBottomY));
             if (isHovered) {
                 hoveredMessage = msg;
+                if (isRightClickHeld) {
+                    activeTab.getSelectedMessages().add(msg);
+                }
             }
             
-            if (activeTab.getSelectedMessages().contains(msg)) {
-                drawContext.fill(x, renderY, x + width, renderY + lineHeight, 0x880000FF); // Semi-transparent blue highlight
-            } else if (isHovered) {
-                drawContext.fill(x, renderY, x + width, renderY + lineHeight, 0x55AAAAAA); // Grey hover highlight
+            boolean isSelected = activeTab.getSelectedMessages().contains(msg);
+            
+            double alpha = 1.0;
+            if (shouldFade) {
+                alpha = 1.0 - (age / 200.0);
+                alpha = alpha * 10.0;
+                alpha = Math.max(0.0, Math.min(1.0, alpha));
+                alpha = alpha * alpha;
             }
             
-            int color = 0xFFFFFFFF;
-            drawContext.drawText(client.textRenderer, msg.getMessage(), x + 2, renderY + 2, color, true);
+            int alphaInt = (int)(255.0 * alpha);
+            int color = (alphaInt << 24) | 0xFFFFFF;
             
-            linesDrawn++;
+            for (int l = wrappedLines.size() - 1; l >= 0; l--) {
+                if (linesDrawn >= maxLines) break;
+                
+                int renderY = startY + height - ((linesDrawn + 1) * lineHeight);
+                
+                if (isSelected) {
+                    drawContext.fill(x, renderY, x + width, renderY + lineHeight, 0x880000FF);
+                } else if (isHovered) {
+                    drawContext.fill(x, renderY, x + width, renderY + lineHeight, 0x55AAAAAA);
+                }
+                
+                if (shouldFade && alphaInt > 0) {
+                    drawContext.fill(x, renderY, x + width, renderY + lineHeight, (int)(alphaInt * 0.5) << 24);
+                }
+                
+                if (alphaInt > 0) {
+                    drawContext.drawTextWithShadow(client.textRenderer, wrappedLines.get(l), x + 2, renderY + 2, color);
+                }
+                
+                linesDrawn++;
+            }
         }
         
         // Render Scrollbar

@@ -38,8 +38,20 @@ public class TabHudRenderer implements HudRenderCallback {
                 int dx = (int)(mouseX - DragState.startMouseX);
                 int dy = (int)(mouseY - DragState.startMouseY);
                 
-                DragState.draggedTab.setX(DragState.startTabX + dx);
-                DragState.draggedTab.setY(DragState.startTabY + dy);
+                int screenWidth = client.getWindow().getScaledWidth();
+                int screenHeight = client.getWindow().getScaledHeight();
+                
+                int newX = DragState.startTabX + dx;
+                int newY = DragState.startTabY + dy;
+                
+                int tabWidth = DragState.draggedTab.getWidth();
+                int tabHeight = DragState.draggedTab.getHeight() + 18;
+                
+                newX = Math.max(0, Math.min(newX, screenWidth - tabWidth));
+                newY = Math.max(0, Math.min(newY, screenHeight - tabHeight));
+                
+                DragState.draggedTab.setX(newX);
+                DragState.draggedTab.setY(newY);
             } else {
                 DragState.isDraggingTab = false;
                 DragState.draggedTab = null;
@@ -54,8 +66,16 @@ public class TabHudRenderer implements HudRenderCallback {
                 int dx = (int)(mouseX - DragState.startMouseX);
                 int dy = (int)(mouseY - DragState.startMouseY);
                 
+                int screenWidth = client.getWindow().getScaledWidth();
+                int screenHeight = client.getWindow().getScaledHeight();
+                int tabX = DragState.draggedTab.getX();
+                int tabY = DragState.draggedTab.getY() + 18;
+                
                 int newWidth = Math.max(100, DragState.startTabWidth + dx);
                 int newHeight = Math.max(50, DragState.startTabHeight + dy);
+                
+                newWidth = Math.min(newWidth, screenWidth - tabX);
+                newHeight = Math.min(newHeight, screenHeight - tabY);
                 
                 DragState.draggedTab.setWidth(newWidth);
                 DragState.draggedTab.setHeight(newHeight);
@@ -63,6 +83,36 @@ public class TabHudRenderer implements HudRenderCallback {
                 DragState.isResizing = false;
                 DragState.draggedTab = null;
                 com.bame.secondchat.config.ModConfig.save();
+            }
+        } else if (DragState.isDraggingScrollbar && DragState.draggedTab != null) {
+            long windowHandle = client.getWindow().getHandle();
+            if (org.lwjgl.glfw.GLFW.glfwGetMouseButton(windowHandle, org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_1) == org.lwjgl.glfw.GLFW.GLFW_PRESS) {
+                double mouseY = client.mouse.getY() * (double)client.getWindow().getScaledHeight() / (double)client.getWindow().getHeight();
+                
+                int dy = (int)(mouseY - DragState.startScrollbarMouseY);
+                
+                int chatHeight = DragState.draggedTab.getHeight();
+                int lineHeight = 12;
+                int maxLines = chatHeight / lineHeight;
+                int maxScroll = DragState.draggedTab.getMessages().size() - maxLines;
+                if (maxScroll < 0) maxScroll = 0;
+                
+                int thumbHeight = Math.max(10, (int)((double)maxLines / DragState.draggedTab.getMessages().size() * chatHeight));
+                double trackHeight = chatHeight - thumbHeight;
+                
+                if (trackHeight > 0) {
+                    double fractionMoved = (double)dy / trackHeight;
+                    double scrollMoved = -fractionMoved * maxScroll; // Negative because down = less scroll
+                    
+                    double newScroll = DragState.startScrollOffset + scrollMoved;
+                    if (newScroll < 0) newScroll = 0;
+                    if (newScroll > maxScroll) newScroll = maxScroll;
+                    
+                    DragState.draggedTab.setScrollOffset(newScroll);
+                }
+            } else {
+                DragState.isDraggingScrollbar = false;
+                DragState.draggedTab = null;
             }
         }
     }

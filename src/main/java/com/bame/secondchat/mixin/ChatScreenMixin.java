@@ -91,7 +91,7 @@ public class ChatScreenMixin {
         }
         
         // 1.7 Check if clicking inside the chat box to select a message
-        if (activeTab != null && button == 1) { // Right click
+        if (activeTab != null) { 
             int chatX = activeTab.getX();
             int chatY = activeTab.getY() + 18;
             int chatWidth = activeTab.getWidth();
@@ -100,24 +100,44 @@ public class ChatScreenMixin {
             if (mouseX >= chatX && mouseX <= chatX + chatWidth &&
                 mouseY >= chatY && mouseY <= chatY + chatHeight) {
                 
-                int lineHeight = 12;
-                int maxLines = chatHeight / lineHeight;
+                // Check if clicking on scrollbar (rightmost 4 pixels)
+                if (button == 0 && mouseX >= chatX + chatWidth - 4) {
+                    DragState.isDraggingScrollbar = true;
+                    DragState.draggedTab = activeTab;
+                    DragState.startScrollbarMouseY = (int)mouseY;
+                    DragState.startScrollOffset = activeTab.getScrollOffset();
+                    cir.setReturnValue(true);
+                    return;
+                }
                 
-                int relativeYFromBottom = (chatY + chatHeight) - (int)mouseY;
-                int linesFromBottom = relativeYFromBottom / lineHeight;
+                if (button == 0) { // Left click in chat bounds
+                    activeTab.clearSelection();
+                    // Don't cancel return value so links can still be clicked by Vanilla if we ever support it, 
+                    // or just return true. Let's return true since it's our custom window area.
+                    cir.setReturnValue(true);
+                    return;
+                }
                 
-                if (linesFromBottom >= 0 && linesFromBottom < maxLines) {
-                    int scrollLines = (int) activeTab.getScrollOffset();
-                    int newestVisibleIndex = activeTab.getMessages().size() - 1 - scrollLines;
-                    if (newestVisibleIndex >= activeTab.getMessages().size()) newestVisibleIndex = activeTab.getMessages().size() - 1;
-                    if (newestVisibleIndex < 0) newestVisibleIndex = 0;
+                if (button == 1) { // Right click
+                    int lineHeight = 12;
+                    int maxLines = chatHeight / lineHeight;
                     
-                    int clickedIndex = newestVisibleIndex - linesFromBottom;
-                    if (clickedIndex >= 0 && clickedIndex <= newestVisibleIndex && clickedIndex < activeTab.getMessages().size()) {
-                        com.bame.secondchat.data.ChatMessage clickedMsg = activeTab.getMessages().get(clickedIndex);
-                        activeTab.toggleSelection(clickedMsg);
-                        cir.setReturnValue(true);
-                        return;
+                    int relativeYFromBottom = (chatY + chatHeight) - (int)mouseY;
+                    int linesFromBottom = relativeYFromBottom / lineHeight;
+                    
+                    if (linesFromBottom >= 0 && linesFromBottom < maxLines) {
+                        int scrollLines = (int) activeTab.getScrollOffset();
+                        int newestVisibleIndex = activeTab.getMessages().size() - 1 - scrollLines;
+                        if (newestVisibleIndex >= activeTab.getMessages().size()) newestVisibleIndex = activeTab.getMessages().size() - 1;
+                        if (newestVisibleIndex < 0) newestVisibleIndex = 0;
+                        
+                        int clickedIndex = newestVisibleIndex - linesFromBottom;
+                        if (clickedIndex >= 0 && clickedIndex <= newestVisibleIndex && clickedIndex < activeTab.getMessages().size()) {
+                            com.bame.secondchat.data.ChatMessage clickedMsg = activeTab.getMessages().get(clickedIndex);
+                            activeTab.toggleSelection(clickedMsg);
+                            cir.setReturnValue(true);
+                            return;
+                        }
                     }
                 }
             }
@@ -148,6 +168,10 @@ public class ChatScreenMixin {
     @Inject(method = "close", at = @At("HEAD"))
     private void onClose(org.spongepowered.asm.mixin.injection.callback.CallbackInfo ci) {
         com.bame.secondchat.config.ModConfig.save();
+        for (ChatTab tab : TabManager.getInstance().getTabs()) {
+            tab.setScrollOffset(0);
+            tab.clearSelection();
+        }
     }
     
     @Inject(method = "mouseScrolled", at = @At("HEAD"), cancellable = true)
@@ -166,6 +190,10 @@ public class ChatScreenMixin {
                 double currentScroll = activeTab.getScrollOffset();
                 currentScroll += verticalAmount; 
                 
+                int maxScroll = activeTab.getMessages().size() - (chatHeight / 12);
+                if (maxScroll < 0) maxScroll = 0;
+                
+                if (currentScroll > maxScroll) currentScroll = maxScroll;
                 if (currentScroll < 0) currentScroll = 0;
                 
                 activeTab.setScrollOffset(currentScroll);
