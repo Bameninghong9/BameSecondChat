@@ -108,25 +108,25 @@ public class GlobalSettingsScreen extends Screen {
         int currentY = startY;
         
         if (showMaxMsg) {
-            context.drawTextWithShadow(this.textRenderer, Text.literal("Max Messages (0 = unendlich)"), xOffset, currentY - 10, 0xAAAAAA);
+            context.drawTextWithShadow(this.textRenderer, Text.literal("Max Messages (0 = unendlich)"), xOffset, currentY - 10, 0xFFAAAAAA);
             this.maxMessagesField.setY(currentY);
             currentY += 40;
         }
         
         if (showTsFormat) {
-            context.drawTextWithShadow(this.textRenderer, Text.literal("Timestamp Format"), xOffset, currentY - 10, 0xAAAAAA);
+            context.drawTextWithShadow(this.textRenderer, Text.literal("Timestamp Format"), xOffset, currentY - 10, 0xFFAAAAAA);
             this.timestampFormatField.setY(currentY);
             currentY += 40;
         }
         
         if (showTsColor) {
-            context.drawTextWithShadow(this.textRenderer, Text.literal("Timestamp Color"), xOffset, currentY - 10, 0xAAAAAA);
+            context.drawTextWithShadow(this.textRenderer, Text.literal("Timestamp Color"), xOffset, currentY - 10, 0xFFAAAAAA);
             this.timestampColorField.setY(currentY);
             currentY += 40;
         }
         
         if (showSelColor) {
-            context.drawTextWithShadow(this.textRenderer, Text.literal("Selection Color (Hex)"), xOffset, currentY - 10, 0xAAAAAA);
+            context.drawTextWithShadow(this.textRenderer, Text.literal("Selection Color (Hex)"), xOffset, currentY - 10, 0xFFAAAAAA);
             this.selectionColorField.setY(currentY);
             currentY += 40;
         }
