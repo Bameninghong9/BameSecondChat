@@ -22,6 +22,9 @@ public class ChatTab {
     
     // Unread message count
     private transient int unreadCount = 0;
+    
+    // Selected messages for screenshot feature
+    private transient java.util.Set<ChatMessage> selectedMessages = new java.util.HashSet<>();
 
     public ChatTab(String name, boolean hideFromAll) {
         this.name = name;
@@ -142,5 +145,24 @@ public class ChatTab {
 
     public void setScrollOffset(double scrollOffset) {
         this.scrollOffset = scrollOffset;
+    }
+    
+    public java.util.Set<ChatMessage> getSelectedMessages() {
+        if (this.selectedMessages == null) {
+            this.selectedMessages = new java.util.HashSet<>();
+        }
+        return this.selectedMessages;
+    }
+    
+    public void toggleSelection(ChatMessage message) {
+        if (getSelectedMessages().contains(message)) {
+            getSelectedMessages().remove(message);
+        } else {
+            getSelectedMessages().add(message);
+        }
+    }
+    
+    public void clearSelection() {
+        getSelectedMessages().clear();
     }
 }

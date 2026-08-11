@@ -21,8 +21,7 @@ public class TabHudRenderer implements HudRenderCallback {
         handleDragging(client);
         
         ChatTab activeTab = TabManager.getInstance().getActiveTab();
-        // Don't render custom chat for "All" tab, vanilla chat handles it
-        if (activeTab != null && !activeTab.getName().equals("All")) {
+        if (activeTab != null) {
             customChatHud.render(drawContext, tickCounter);
         }
         
@@ -131,7 +130,7 @@ public class TabHudRenderer implements HudRenderCallback {
         drawContext.drawText(client.textRenderer, "+", plusX + 6, plusY + 3, 0xFFFFFFFF, true);
         
         // Render resize handle for active tab if custom chat is open
-        if (activeTab != null && !activeTab.getName().equals("All") && client.currentScreen instanceof net.minecraft.client.gui.screen.ChatScreen) {
+        if (activeTab != null && client.currentScreen instanceof net.minecraft.client.gui.screen.ChatScreen) {
             int chatX = activeTab.getX();
             int chatY = activeTab.getY() + 18;
             int chatWidth = activeTab.getWidth();

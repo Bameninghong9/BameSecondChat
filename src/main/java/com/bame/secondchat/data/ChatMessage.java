@@ -12,12 +12,18 @@ public class ChatMessage {
     @Nullable
     private final MessageIndicator indicator;
     private final int creationTick;
+    private final long timestamp;
 
     public ChatMessage(Text message, @Nullable MessageSignatureData signature, @Nullable MessageIndicator indicator, int creationTick) {
         this.message = message;
         this.signature = signature;
         this.indicator = indicator;
         this.creationTick = creationTick;
+        this.timestamp = System.currentTimeMillis();
+    }
+
+    public long getTimestamp() {
+        return timestamp;
     }
 
     public Text getMessage() {

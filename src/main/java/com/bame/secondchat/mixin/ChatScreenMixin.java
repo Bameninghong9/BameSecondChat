@@ -68,7 +68,7 @@ public class ChatScreenMixin {
         }
         
         // 1.5 Check if clicking on bottom-right corner of active tab to resize
-        if (activeTab != null && activeTab.getName() != null && !activeTab.getName().equals("All")) {
+        if (activeTab != null && activeTab.getName() != null) {
             int resizeBoxSize = 10;
             int chatX = activeTab.getX();
             int chatY = activeTab.getY() + 18;
@@ -90,16 +90,52 @@ public class ChatScreenMixin {
             }
         }
         
+        // 1.7 Check if clicking inside the chat box to select a message
+        if (activeTab != null && button == 1) { // Right click
+            int chatX = activeTab.getX();
+            int chatY = activeTab.getY() + 18;
+            int chatWidth = activeTab.getWidth();
+            int chatHeight = activeTab.getHeight();
+            
+            if (mouseX >= chatX && mouseX <= chatX + chatWidth &&
+                mouseY >= chatY && mouseY <= chatY + chatHeight) {
+                
+                int lineHeight = 12;
+                int maxLines = chatHeight / lineHeight;
+                
+                int relativeYFromBottom = (chatY + chatHeight) - (int)mouseY;
+                int linesFromBottom = relativeYFromBottom / lineHeight;
+                
+                if (linesFromBottom >= 0 && linesFromBottom < maxLines) {
+                    int scrollLines = (int) activeTab.getScrollOffset();
+                    int newestVisibleIndex = activeTab.getMessages().size() - 1 - scrollLines;
+                    if (newestVisibleIndex >= activeTab.getMessages().size()) newestVisibleIndex = activeTab.getMessages().size() - 1;
+                    if (newestVisibleIndex < 0) newestVisibleIndex = 0;
+                    
+                    int clickedIndex = newestVisibleIndex - linesFromBottom;
+                    if (clickedIndex >= 0 && clickedIndex <= newestVisibleIndex && clickedIndex < activeTab.getMessages().size()) {
+                        com.bame.secondchat.data.ChatMessage clickedMsg = activeTab.getMessages().get(clickedIndex);
+                        activeTab.toggleSelection(clickedMsg);
+                        cir.setReturnValue(true);
+                        return;
+                    }
+                }
+            }
+        }
+        
         // 2. Check if clicked on the "+" button (anchored to "All" tab)
         ChatTab allTab = TabManager.getInstance().getAllTab();
-        int plusX = allTab.getX() + client.textRenderer.getWidth("All") + 12 + 2;
+        int allWidth = client.textRenderer.getWidth("All") + 12;
+        if (allTab.getUnreadCount() > 0) {
+            allWidth += client.textRenderer.getWidth(String.valueOf(allTab.getUnreadCount())) + 6;
+        }
+        int plusX = allTab.getX() + allWidth + 2;
         int plusY = allTab.getY();
         int plusWidth = client.textRenderer.getWidth("+") + 12;
         
         if (mouseX >= plusX && mouseX <= plusX + plusWidth && mouseY >= plusY && mouseY <= plusY + 14) {
             if (button == 0) {
                 ChatTab newTab = new ChatTab("", false);
-                // Position new tab slightly offset from All tab
                 newTab.setX(allTab.getX() + 20);
                 newTab.setY(allTab.getY() + 20);
                 client.setScreen(new com.bame.secondchat.gui.TabEditScreen((ChatScreen)(Object)this, newTab, true));
@@ -117,13 +153,13 @@ public class ChatScreenMixin {
     @Inject(method = "mouseScrolled", at = @At("HEAD"), cancellable = true)
     private void onMouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount, CallbackInfoReturnable<Boolean> cir) {
         ChatTab activeTab = TabManager.getInstance().getActiveTab();
-        if (activeTab != null && !activeTab.getName().equals("All")) {
+        MinecraftClient client = MinecraftClient.getInstance();
+        if (activeTab != null && activeTab.getName() != null) {
             int chatX = activeTab.getX();
             int chatY = activeTab.getY() + 18;
             int chatWidth = activeTab.getWidth();
             int chatHeight = activeTab.getHeight();
             
-            // If mouse is inside the chat area, scroll
             if (mouseX >= chatX && mouseX <= chatX + chatWidth &&
                 mouseY >= chatY && mouseY <= chatY + chatHeight) {
                 
