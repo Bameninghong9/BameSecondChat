@@ -116,6 +116,18 @@ public class ChatTab {
         if (this.messages == null) {
             this.messages = new ArrayList<>();
         }
+        
+        int stackLimit = com.bame.secondchat.config.GlobalConfig.getInstance().stackMessages;
+        if (stackLimit > 0 && !this.messages.isEmpty()) {
+            ChatMessage lastMessage = this.messages.get(this.messages.size() - 1);
+            if (lastMessage.getMessage().getString().equals(message.getMessage().getString())) {
+                if (lastMessage.getStackCount() < stackLimit) {
+                    lastMessage.incrementStackCount();
+                    return;
+                }
+            }
+        }
+        
         this.messages.add(message);
         
         int max = com.bame.secondchat.config.GlobalConfig.getInstance().maxMessages;

@@ -35,7 +35,7 @@ public class CustomChatHud {
                 if (!selected.isEmpty()) {
                     java.util.List<com.bame.secondchat.data.SelectedLine> orderedSelection = new java.util.ArrayList<>();
                     for (ChatMessage msg : activeTab.getMessages()) {
-                        java.util.List<net.minecraft.text.OrderedText> wrapped = client.textRenderer.wrapLines(msg.getMessage(), activeTab.getWidth() - 8);
+                        java.util.List<net.minecraft.text.OrderedText> wrapped = client.textRenderer.wrapLines(msg.getRenderedMessage(), activeTab.getWidth() - 8);
                         for (int l = 0; l < wrapped.size(); l++) {
                             com.bame.secondchat.data.SelectedLine sl = new com.bame.secondchat.data.SelectedLine(msg, l);
                             if (selected.contains(sl)) {
@@ -53,7 +53,7 @@ public class CustomChatHud {
                 if (!selected.isEmpty()) {
                     StringBuilder sb = new StringBuilder();
                     for (ChatMessage msg : activeTab.getMessages()) {
-                        java.util.List<net.minecraft.text.OrderedText> wrapped = client.textRenderer.wrapLines(msg.getMessage(), activeTab.getWidth() - 8);
+                        java.util.List<net.minecraft.text.OrderedText> wrapped = client.textRenderer.wrapLines(msg.getRenderedMessage(), activeTab.getWidth() - 8);
                         for (int l = 0; l < wrapped.size(); l++) {
                             com.bame.secondchat.data.SelectedLine sl = new com.bame.secondchat.data.SelectedLine(msg, l);
                             if (selected.contains(sl)) {
@@ -129,7 +129,7 @@ public class CustomChatHud {
                 continue;
             }
             
-            List<net.minecraft.text.OrderedText> wrappedLines = client.textRenderer.wrapLines(msg.getMessage(), width - 8);
+            List<net.minecraft.text.OrderedText> wrappedLines = client.textRenderer.wrapLines(msg.getRenderedMessage(), width - 8);
             
             double alpha = 1.0;
             if (shouldFade) {

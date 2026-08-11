@@ -18,6 +18,7 @@ public class GlobalSettingsScreen extends Screen {
     private TextFieldWidget timestampColorField;
     private TextFieldWidget selectionColorField;
     
+    private TextFieldWidget stackMessagesField;
     private ButtonWidget timestampColorResetButton;
     private ButtonWidget selectionColorResetButton;
     
@@ -62,6 +63,10 @@ public class GlobalSettingsScreen extends Screen {
         this.selectionColorField.setText(config.selectionColor);
         this.addDrawableChild(this.selectionColorField);
         
+        this.stackMessagesField = new TextFieldWidget(this.textRenderer, xOffset, startY + 120, fieldWidth, fieldHeight, Text.literal("Stack Messages"));
+        this.stackMessagesField.setText(String.valueOf(config.stackMessages));
+        this.addDrawableChild(this.stackMessagesField);
+        
         this.timestampColorResetButton = ButtonWidget.builder(Text.literal("Reset"), button -> {
             this.timestampColorField.setText("§7");
         }).dimensions(xOffset + fieldWidth + 5, startY + 60, 50, 20).build();
@@ -86,6 +91,11 @@ public class GlobalSettingsScreen extends Screen {
             config.maxMessages = Integer.parseInt(this.maxMessagesField.getText());
         } catch (NumberFormatException e) {
             config.maxMessages = 0;
+        }
+        try {
+            config.stackMessages = Integer.parseInt(this.stackMessagesField.getText());
+        } catch (NumberFormatException e) {
+            config.stackMessages = 0;
         }
         config.timestampFormat = this.timestampFormatField.getText();
         config.timestampColor = this.timestampColorField.getText();
@@ -138,11 +148,13 @@ public class GlobalSettingsScreen extends Screen {
         boolean showTsFormat = "timestamp format".contains(search) || search.isEmpty();
         boolean showTsColor = "timestamp color".contains(search) || search.isEmpty();
         boolean showSelColor = "selection color".contains(search) || search.isEmpty();
+        boolean showStackMsg = "stack messages".contains(search) || search.isEmpty();
         
         this.maxMessagesField.visible = showMaxMsg;
         this.timestampFormatField.visible = showTsFormat;
         this.timestampColorField.visible = showTsColor;
         this.selectionColorField.visible = showSelColor;
+        this.stackMessagesField.visible = showStackMsg;
         
         this.timestampColorResetButton.visible = showTsColor;
         this.selectionColorResetButton.visible = showSelColor;
@@ -182,6 +194,12 @@ public class GlobalSettingsScreen extends Screen {
             context.fill(xOffset - 26, currentY - 1, xOffset - 4, currentY + 21, 0xFFFFFFFF);
             context.fill(xOffset - 25, currentY, xOffset - 5, currentY + 20, color);
             
+            currentY += 40;
+        }
+        
+        if (showStackMsg) {
+            context.drawTextWithShadow(this.textRenderer, Text.literal("Stack Messages (0 = aus)"), xOffset, currentY - 10, 0xFFAAAAAA);
+            this.stackMessagesField.setY(currentY);
             currentY += 40;
         }
         

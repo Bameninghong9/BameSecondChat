@@ -11,6 +11,7 @@ import java.io.IOException;
 
 public class GlobalConfig {
     public int maxMessages = 0; // 0 = infinite
+    public int stackMessages = 0; // 0 = disabled, >0 = limit
     public String timestampFormat = "dd.MM.yyyy HH:mm 'Uhr'";
     public String timestampColor = "#AAAAAA"; // default grey
     public String selectionColor = "#880000FF"; // default transparent blue
