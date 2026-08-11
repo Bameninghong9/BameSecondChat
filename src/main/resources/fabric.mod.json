@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "bamesecondchat",
+  "version": "${version}",
+  "name": "BameSecondChat",
+  "description": "Custom Chat Tabs for Minecraft",
+  "authors": [
+    "Bame"
+  ],
+  "contact": {},
+  "license": "MIT",
+  "icon": "assets/bamesecondchat/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "com.bame.secondchat.BameSecondChat"
+    ]
+  },
+  "mixins": [
+    "bamesecondchat.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.16.5",
+    "minecraft": "~1.21.11",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}
