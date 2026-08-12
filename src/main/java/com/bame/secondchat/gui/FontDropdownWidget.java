@@ -25,8 +25,7 @@ public class FontDropdownWidget extends ClickableWidget {
         context.fill(this.getX(), this.getY(), this.getX() + this.width, this.getY() + ITEM_HEIGHT, mainBgColor);
         
         // Draw current text
-        String currentText = FontTransformer.currentStyle.getDisplayName();
-        String displayCurrentText = FontTransformer.transformWithStyle(currentText, FontTransformer.currentStyle);
+        String displayCurrentText = FontTransformer.currentStyle.getFormattedName();
         context.drawCenteredTextWithShadow(client.textRenderer, Text.literal(displayCurrentText), this.getX() + this.width / 2, this.getY() + (ITEM_HEIGHT - 8) / 2, 0xFFFFFFFF);
         
         // Draw dropdown if open
@@ -40,8 +39,7 @@ public class FontDropdownWidget extends ClickableWidget {
                 int itemBgColor = isItemHovered ? 0x88404050 : 0x88101015; // semi-transparent background for dropdown items
                 context.fill(this.getX(), itemY, this.getX() + this.width, itemY + ITEM_HEIGHT, itemBgColor);
                 
-                String itemText = styles[i].getDisplayName();
-                String displayItemText = FontTransformer.transformWithStyle(itemText, styles[i]);
+                String displayItemText = styles[i].getFormattedName();
                 context.drawCenteredTextWithShadow(client.textRenderer, Text.literal(displayItemText), this.getX() + this.width / 2, itemY + (ITEM_HEIGHT - 8) / 2, 0xFFFFFFFF);
             }
         }

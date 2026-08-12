@@ -9,6 +9,7 @@ public class FontTransformer {
         OUTLINED("OUTLINED");
 
         private final String displayName;
+        private String formattedName = null;
 
         FontStyle(String displayName) {
             this.displayName = displayName;
@@ -18,6 +19,17 @@ public class FontTransformer {
             return displayName;
         }
         
+        public String getFormattedName() {
+            if (formattedName == null) {
+                // Pre-compute and cache to avoid allocating new strings every frame during rendering
+                FontStyle oldStyle = currentStyle;
+                currentStyle = this;
+                formattedName = FontTransformer.transform(displayName);
+                currentStyle = oldStyle;
+            }
+            return formattedName;
+        }
+
         public FontStyle next() {
             return values()[(this.ordinal() + 1) % values().length];
         }
