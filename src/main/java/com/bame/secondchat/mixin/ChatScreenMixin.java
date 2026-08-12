@@ -109,6 +109,57 @@ public class ChatScreenMixin {
                 
                 if (button == 0) { // Left click in chat bounds
                     activeTab.clearSelection();
+                    
+                    int lineHeight = 12;
+                    int maxLines = chatHeight / lineHeight;
+                    
+                    int relativeYFromBottom = (chatY + chatHeight) - (int)mouseY;
+                    int linesFromBottom = relativeYFromBottom / lineHeight;
+                    
+                    if (linesFromBottom >= 0 && linesFromBottom < maxLines) {
+                        int scrollLines = (int) activeTab.getScrollOffset();
+                        int targetVisibleLine = linesFromBottom; // 0 = bottom
+                        
+                        int currentVisibleLine = 0;
+                        int skippedLines = 0;
+                        
+                        for (int i = activeTab.getMessages().size() - 1; i >= 0; i--) {
+                            com.bame.secondchat.data.ChatMessage msg = activeTab.getMessages().get(i);
+                            java.util.List<net.minecraft.text.OrderedText> wrapped = client.textRenderer.wrapLines(msg.getMessage(), chatWidth - 8);
+                            
+                            for (int l = wrapped.size() - 1; l >= 0; l--) {
+                                if (skippedLines < scrollLines) {
+                                    skippedLines++;
+                                    continue;
+                                }
+                                
+                                if (currentVisibleLine == targetVisibleLine) {
+                                    final int targetX = (int)(mouseX - (chatX + 2));
+                                    final int[] currentX = {0};
+                                    final net.minecraft.text.Style[] foundStyle = {null};
+                                    
+                                    wrapped.get(l).accept((index, style, codePoint) -> {
+                                        int charWidth = client.textRenderer.getWidth(new String(Character.toChars(codePoint)));
+                                        currentX[0] += charWidth;
+                                        if (currentX[0] > targetX && foundStyle[0] == null) {
+                                            foundStyle[0] = style;
+                                            return false;
+                                        }
+                                        return true;
+                                    });
+                                    
+                                    if (foundStyle[0] != null && foundStyle[0].getClickEvent() != null) {
+                                        com.bame.secondchat.mixin.ScreenAccessor.invokeHandleClickEvent(foundStyle[0].getClickEvent(), client, (ChatScreen)(Object)this);
+                                    }
+                                    
+                                    cir.setReturnValue(true);
+                                    return;
+                                }
+                                currentVisibleLine++;
+                            }
+                        }
+                    }
+                    
                     cir.setReturnValue(true);
                     return;
                 }
