@@ -154,23 +154,20 @@ public class CustomChatHud {
                         tab.getSelectedLines().add(new com.bame.secondchat.data.SelectedLine(msg, l));
                     }
                     
-                    final int targetX = (int)(mouseX - (x + 2));
-                    final int[] currentX = {0};
-                    final net.minecraft.text.Style[] foundStyle = {null};
+                    int targetX = (int)(mouseX - (x + 2));
+                    int[] currentX = {0};
+                    net.minecraft.text.Style[] foundStyle = {null};
                     
                     wrappedLines.get(l).accept((index, style, codePoint) -> {
-                        int charWidth = client.textRenderer.getWidth(new String(Character.toChars(codePoint)));
-                        currentX[0] += charWidth;
-                        if (currentX[0] > targetX && foundStyle[0] == null) {
+                        int charWidth = client.textRenderer.getWidth(String.valueOf((char) codePoint));
+                        if (targetX >= currentX[0] && targetX < currentX[0] + charWidth) {
                             foundStyle[0] = style;
                             return false;
                         }
+                        currentX[0] += charWidth;
                         return true;
                     });
-                    
-                    if (foundStyle[0] != null) {
-                        hoveredStyle = foundStyle[0];
-                    }
+                    hoveredStyle = foundStyle[0];
                 }
                 
                 boolean isSelected = tab.isSelected(msg, l);
