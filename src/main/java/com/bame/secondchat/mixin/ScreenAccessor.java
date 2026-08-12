@@ -8,8 +8,4 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 
 @Mixin(Screen.class)
 public interface ScreenAccessor {
-    @Invoker("handleClickEvent")
-    static void invokeHandleClickEvent(ClickEvent clickEvent, MinecraftClient client, Screen screen) {
-        throw new AssertionError();
-    }
 }

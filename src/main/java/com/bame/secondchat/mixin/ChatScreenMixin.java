@@ -11,11 +11,15 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.Shadow;
 
 import java.util.List;
 
 @Mixin(ChatScreen.class)
-public class ChatScreenMixin {
+public abstract class ChatScreenMixin {
+
+    @Shadow
+    protected abstract boolean handleClickEvent(net.minecraft.text.Style style, boolean insert);
 
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
     private void onMouseClicked(Click click, boolean bl, CallbackInfoReturnable<Boolean> cir) {
@@ -125,7 +129,7 @@ public class ChatScreenMixin {
                         
                         for (int i = activeTab.getMessages().size() - 1; i >= 0; i--) {
                             com.bame.secondchat.data.ChatMessage msg = activeTab.getMessages().get(i);
-                            java.util.List<net.minecraft.text.OrderedText> wrapped = client.textRenderer.wrapLines(msg.getMessage(), chatWidth - 8);
+                            java.util.List<net.minecraft.text.OrderedText> wrapped = client.textRenderer.wrapLines(msg.getRenderedMessage(), chatWidth - 8);
                             
                             for (int l = wrapped.size() - 1; l >= 0; l--) {
                                 if (skippedLines < scrollLines) {
@@ -135,21 +139,26 @@ public class ChatScreenMixin {
                                 
                                 if (currentVisibleLine == targetVisibleLine) {
                                     final int targetX = (int)(mouseX - (chatX + 2));
-                                    final int[] currentX = {0};
-                                    final net.minecraft.text.Style[] foundStyle = {null};
+                                    int[] currentX = {0};
+                                    net.minecraft.text.Style[] foundStyle = {null};
                                     
-                                    wrapped.get(l).accept((index, style, codePoint) -> {
-                                        int charWidth = client.textRenderer.getWidth(new String(Character.toChars(codePoint)));
-                                        currentX[0] += charWidth;
-                                        if (currentX[0] > targetX && foundStyle[0] == null) {
-                                            foundStyle[0] = style;
+                                    wrapped.get(l).accept((index, s, codePoint) -> {
+                                        int charWidth = client.textRenderer.getWidth(String.valueOf((char) codePoint));
+                                        if (targetX >= currentX[0] && targetX < currentX[0] + charWidth) {
+                                            foundStyle[0] = s;
                                             return false;
                                         }
+                                        currentX[0] += charWidth;
                                         return true;
                                     });
                                     
-                                    if (foundStyle[0] != null && foundStyle[0].getClickEvent() != null) {
-                                        com.bame.secondchat.mixin.ScreenAccessor.invokeHandleClickEvent(foundStyle[0].getClickEvent(), client, (ChatScreen)(Object)this);
+                                    net.minecraft.text.Style style = foundStyle[0];
+                                    
+                                    if (style != null && style.getClickEvent() != null) {
+                                        boolean success = this.handleClickEvent(style, false);
+                                        if (success) {
+                                            cir.setReturnValue(true);
+                                        }
                                     }
                                     
                                     cir.setReturnValue(true);
@@ -180,7 +189,7 @@ public class ChatScreenMixin {
                         
                         for (int i = activeTab.getMessages().size() - 1; i >= 0; i--) {
                             com.bame.secondchat.data.ChatMessage msg = activeTab.getMessages().get(i);
-                            java.util.List<net.minecraft.text.OrderedText> wrapped = client.textRenderer.wrapLines(msg.getMessage(), chatWidth - 8);
+                            java.util.List<net.minecraft.text.OrderedText> wrapped = client.textRenderer.wrapLines(msg.getRenderedMessage(), chatWidth - 8);
                             
                             for (int l = wrapped.size() - 1; l >= 0; l--) {
                                 if (skippedLines < scrollLines) {
