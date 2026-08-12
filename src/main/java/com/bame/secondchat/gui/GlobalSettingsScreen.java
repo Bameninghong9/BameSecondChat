@@ -21,6 +21,7 @@ public class GlobalSettingsScreen extends Screen {
     private TextFieldWidget stackMessagesField;
     private ButtonWidget timestampColorResetButton;
     private ButtonWidget selectionColorResetButton;
+    private ButtonWidget showFontDropdownButton;
     
     private ButtonWidget saveButton;
 
@@ -76,6 +77,17 @@ public class GlobalSettingsScreen extends Screen {
             this.selectionColorField.setText("#880000FF");
         }).dimensions(xOffset + fieldWidth + 5, startY + 90, 50, 20).build();
         this.addDrawableChild(this.selectionColorResetButton);
+        
+        Text initialText = Text.literal(com.bame.secondchat.config.ModConfig.showFontDropdown ? "Yes" : "No")
+            .withColor(com.bame.secondchat.config.ModConfig.showFontDropdown ? 0x00FF00 : 0xFF0000);
+            
+        this.showFontDropdownButton = ButtonWidget.builder(initialText, button -> {
+            com.bame.secondchat.config.ModConfig.showFontDropdown = !com.bame.secondchat.config.ModConfig.showFontDropdown;
+            Text newText = Text.literal(com.bame.secondchat.config.ModConfig.showFontDropdown ? "Yes" : "No")
+                .withColor(com.bame.secondchat.config.ModConfig.showFontDropdown ? 0x00FF00 : 0xFF0000);
+            button.setMessage(newText);
+        }).dimensions(xOffset, startY + 150, fieldWidth, 20).build();
+        this.addDrawableChild(this.showFontDropdownButton);
         
         this.saveButton = ButtonWidget.builder(Text.literal("Save & Close"), button -> {
             saveSettings();
@@ -135,7 +147,7 @@ public class GlobalSettingsScreen extends Screen {
         super.render(context, mouseX, mouseY, delta);
         
         // Draw title
-        context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, 5, 0xFFFFFF);
+        context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, 5, 0xFFFFFFFF);
         
         int startY = 50;
         int fieldWidth = 200;
@@ -158,6 +170,9 @@ public class GlobalSettingsScreen extends Screen {
         
         this.timestampColorResetButton.visible = showTsColor;
         this.selectionColorResetButton.visible = showSelColor;
+        
+        boolean showFontDropdownSetting = "font dropdown".contains(search) || search.isEmpty();
+        this.showFontDropdownButton.visible = showFontDropdownSetting;
         
         int currentY = startY;
         
@@ -200,6 +215,12 @@ public class GlobalSettingsScreen extends Screen {
         if (showStackMsg) {
             context.drawTextWithShadow(this.textRenderer, Text.literal("Stack Messages (0 = aus)"), xOffset, currentY - 10, 0xFFAAAAAA);
             this.stackMessagesField.setY(currentY);
+            currentY += 40;
+        }
+        
+        if (showFontDropdownSetting) {
+            context.drawTextWithShadow(this.textRenderer, Text.literal("Show Font Dropdown"), xOffset, currentY - 10, 0xFFAAAAAA);
+            this.showFontDropdownButton.setY(currentY);
             currentY += 40;
         }
         

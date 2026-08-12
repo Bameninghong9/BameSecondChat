@@ -22,10 +22,13 @@ public class ModConfig {
             .create();
 
     private static final File CONFIG_FILE = new File(FabricLoader.getInstance().getConfigDir().toFile(), "bamesecondchat.json");
+    
+    public static boolean showFontDropdown = true;
 
     public static class ConfigData {
         public int hudX = -1;
         public int hudY = -1;
+        public boolean showFontDropdown = true;
         public List<ChatTab> tabs;
     }
 
@@ -39,6 +42,10 @@ public class ModConfig {
                     }
                     TabManager.getInstance().setHudX(data.hudX);
                     TabManager.getInstance().setHudY(data.hudY);
+                    
+                    // Default to true if not present, but we don't have a direct instance variable for it outside config
+                    // We will just keep it statically accessible
+                    ModConfig.showFontDropdown = data.showFontDropdown;
                 }
             } catch (Exception e) {
                 System.err.println("[BameSecondChat] Failed to load config, saving defaults: " + e.getMessage());
@@ -55,6 +62,7 @@ public class ModConfig {
             ConfigData data = new ConfigData();
             data.hudX = TabManager.getInstance().getHudX();
             data.hudY = TabManager.getInstance().getHudY();
+            data.showFontDropdown = ModConfig.showFontDropdown;
             
             data.tabs = TabManager.getInstance().getTabs();
             

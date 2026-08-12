@@ -175,7 +175,7 @@ public class TabEditScreen extends Screen {
         super.render(context, mouseX, mouseY, delta);
         
         int centerX = this.width / 2;
-        context.drawCenteredTextWithShadow(this.textRenderer, this.title, centerX, 15, 0xFFFFFF);
+        context.drawCenteredTextWithShadow(this.textRenderer, this.title, centerX, 15, 0xFFFFFFFF);
         
         context.drawTextWithShadow(this.textRenderer, Text.literal("Tab Name:"), centerX - 100, 38, 0xFFA0A0A0);
         

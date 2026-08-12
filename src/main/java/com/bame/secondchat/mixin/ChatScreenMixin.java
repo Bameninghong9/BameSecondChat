@@ -16,13 +16,40 @@ import org.spongepowered.asm.mixin.Shadow;
 import java.util.List;
 
 @Mixin(ChatScreen.class)
-public abstract class ChatScreenMixin {
+public abstract class ChatScreenMixin extends net.minecraft.client.gui.screen.Screen {
+
+    protected ChatScreenMixin(net.minecraft.text.Text title) {
+        super(title);
+    }
+    
+    private com.bame.secondchat.gui.FontDropdownWidget fontDropdownWidget;
 
     @Shadow
     protected abstract boolean handleClickEvent(net.minecraft.text.Style style, boolean insert);
 
+    @Inject(method = "render", at = @At("TAIL"))
+    private void onRender(net.minecraft.client.gui.DrawContext context, int mouseX, int mouseY, float delta, org.spongepowered.asm.mixin.injection.callback.CallbackInfo ci) {
+        if (com.bame.secondchat.config.ModConfig.showFontDropdown) {
+            if (this.fontDropdownWidget == null) {
+                MinecraftClient client = MinecraftClient.getInstance();
+                int screenWidth = client.getWindow().getScaledWidth();
+                this.fontDropdownWidget = new com.bame.secondchat.gui.FontDropdownWidget(screenWidth - 110, 5, 100, 16);
+            }
+            this.fontDropdownWidget.render(context, mouseX, mouseY, delta);
+        } else {
+            this.fontDropdownWidget = null;
+        }
+    }
+
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
     private void onMouseClicked(Click click, boolean bl, CallbackInfoReturnable<Boolean> cir) {
+        if (this.fontDropdownWidget != null && com.bame.secondchat.config.ModConfig.showFontDropdown) {
+            if (this.fontDropdownWidget.mouseClicked(click, bl)) {
+                cir.setReturnValue(true);
+                return;
+            }
+        }
+        
         double mouseX = click.x();
         double mouseY = click.y();
         int button = click.button();
