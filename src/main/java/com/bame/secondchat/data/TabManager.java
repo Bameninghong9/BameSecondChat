@@ -9,6 +9,10 @@ public class TabManager {
     private final List<ChatTab> tabs = new ArrayList<>();
     private boolean isAllTabOpen = true;
     private ChatTab activeCustomTab = null;
+    
+    private long blockCaptureUntil = 0;
+    private ChatTab blockCaptureTab = null;
+    
     private final ChatTab allTab;
 
     // Global positions for the Custom Chat HUD
@@ -85,6 +89,18 @@ public class TabManager {
      */
     public boolean processMessage(ChatMessage message, String plainText) {
         boolean hideFromVanilla = false;
+        long now = System.currentTimeMillis();
+        
+        if (now < blockCaptureUntil && blockCaptureTab != null) {
+            blockCaptureTab.addMessage(message);
+            if (blockCaptureTab != activeCustomTab) {
+                blockCaptureTab.incrementUnread();
+            }
+            if (blockCaptureTab.isHideFromAll()) {
+                hideFromVanilla = true;
+            }
+            return hideFromVanilla;
+        }
         
         boolean addToAll = true;
 
@@ -92,9 +108,13 @@ public class TabManager {
             if (tab == allTab) continue;
 
             boolean matches = false;
+            boolean startsBlock = false;
             for (FilterRule rule : tab.getRules()) {
                 if (rule.matches(plainText)) {
                     matches = true;
+                    if (rule instanceof CapturesBlockRule) {
+                        startsBlock = true;
+                    }
                     break;
                 }
             }
@@ -104,6 +124,12 @@ public class TabManager {
                 if (tab != activeCustomTab) {
                     tab.incrementUnread();
                 }
+                
+                if (startsBlock) {
+                    blockCaptureTab = tab;
+                    blockCaptureUntil = now + 100; // Capture messages for the next 100ms
+                }
+
                 if (tab.isHideFromAll()) {
                     hideFromVanilla = true;
                     addToAll = false;

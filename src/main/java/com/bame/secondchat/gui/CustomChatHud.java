@@ -14,6 +14,17 @@ public class CustomChatHud {
     
     private static boolean wasSPressed = false;
     private static boolean wasCPressed = false;
+    
+    public static void updateKeyStates(MinecraftClient client) {
+        boolean chatOpen = client.currentScreen instanceof net.minecraft.client.gui.screen.ChatScreen;
+        if (chatOpen) {
+            wasSPressed = org.lwjgl.glfw.GLFW.glfwGetKey(client.getWindow().getHandle(), org.lwjgl.glfw.GLFW.GLFW_KEY_S) == org.lwjgl.glfw.GLFW.GLFW_PRESS;
+            wasCPressed = org.lwjgl.glfw.GLFW.glfwGetKey(client.getWindow().getHandle(), org.lwjgl.glfw.GLFW.GLFW_KEY_C) == org.lwjgl.glfw.GLFW.GLFW_PRESS;
+        } else {
+            wasSPressed = false;
+            wasCPressed = false;
+        }
+    }
 
     public void render(DrawContext drawContext, RenderTickCounter tickCounter, ChatTab tab) {
         if (tab == null) return;
@@ -70,9 +81,6 @@ public class CustomChatHud {
                     tab.clearSelection();
                 }
             }
-            
-            wasSPressed = isSPressed;
-            wasCPressed = isCPressed;
         }
 
         List<ChatMessage> messages = tab.getMessages();

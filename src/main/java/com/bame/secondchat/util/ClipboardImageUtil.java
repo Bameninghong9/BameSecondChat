@@ -44,7 +44,7 @@ public class ClipboardImageUtil {
             final int[] currentX = {padding};
             final int y = currentY;
 
-            java.util.List<net.minecraft.text.OrderedText> wrappedLines = client.textRenderer.wrapLines(sl.getMessage().getMessage(), chatWidth - 8);
+            java.util.List<net.minecraft.text.OrderedText> wrappedLines = client.textRenderer.wrapLines(sl.getMessage().getRenderedMessage(), chatWidth - 8);
             if (sl.getLineIndex() >= 0 && sl.getLineIndex() < wrappedLines.size()) {
                 net.minecraft.text.OrderedText orderedText = wrappedLines.get(sl.getLineIndex());
                 

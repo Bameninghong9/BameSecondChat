@@ -29,6 +29,8 @@ public class TabHudRenderer implements HudRenderCallback {
             customChatHud.render(drawContext, tickCounter, activeCustomTab);
         }
         
+        CustomChatHud.updateKeyStates(client);
+        
         renderTabBar(drawContext);
     }
 

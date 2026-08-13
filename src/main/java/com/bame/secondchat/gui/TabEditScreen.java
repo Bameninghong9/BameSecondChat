@@ -22,7 +22,7 @@ public class TabEditScreen extends Screen {
     private TextFieldWidget rulesField;
     
     private boolean hideFromVanilla;
-    private boolean isStartsWith;
+    private int ruleTypeIndex = 0; // 0=Contains, 1=StartsWith, 2=CapturesBlock
     private ButtonWidget ruleTypeButton;
 
     public TabEditScreen(Screen parent, ChatTab tab, boolean isNew) {
@@ -33,10 +33,13 @@ public class TabEditScreen extends Screen {
         this.hideFromVanilla = tab.isHideFromAll();
         
         // Determine rule type from existing rules
-        this.isStartsWith = false;
+        this.ruleTypeIndex = 0;
         for (FilterRule rule : tab.getRules()) {
-            if (rule instanceof com.bame.secondchat.data.StartsWithRule) {
-                this.isStartsWith = true;
+            if (rule instanceof com.bame.secondchat.data.CapturesBlockRule) {
+                this.ruleTypeIndex = 2;
+                break;
+            } else if (rule instanceof com.bame.secondchat.data.StartsWithRule) {
+                this.ruleTypeIndex = 1;
                 break;
             }
         }
@@ -66,7 +69,7 @@ public class TabEditScreen extends Screen {
         
         // Rule Type Toggle Button
         this.ruleTypeButton = ButtonWidget.builder(getRuleTypeText(), button -> {
-            this.isStartsWith = !this.isStartsWith;
+            this.ruleTypeIndex = (this.ruleTypeIndex + 1) % 3;
             button.setMessage(getRuleTypeText());
         }).dimensions(centerX - 100, startY, 200, 20).build();
         this.addDrawableChild(this.ruleTypeButton);
@@ -134,7 +137,10 @@ public class TabEditScreen extends Screen {
     }
     
     private Text getRuleTypeText() {
-        return Text.literal("Rule Type: " + (this.isStartsWith ? "Starts With" : "Contains"));
+        String typeStr = "Contains";
+        if (this.ruleTypeIndex == 1) typeStr = "Starts With";
+        else if (this.ruleTypeIndex == 2) typeStr = "Captures Block";
+        return Text.literal("Rule Type: " + typeStr);
     }
 
     private void saveTab() {
@@ -147,7 +153,9 @@ public class TabEditScreen extends Screen {
         for (String rRaw : rulesRaw) {
             String r = rRaw.trim();
             if (!r.isEmpty()) {
-                if (this.isStartsWith) {
+                if (this.ruleTypeIndex == 2) {
+                    newRules.add(new com.bame.secondchat.data.CapturesBlockRule(r));
+                } else if (this.ruleTypeIndex == 1) {
                     newRules.add(new com.bame.secondchat.data.StartsWithRule(r));
                 } else {
                     newRules.add(new com.bame.secondchat.data.ContainsRule(r));

@@ -3,6 +3,7 @@ package com.bame.secondchat.config;
 import com.bame.secondchat.data.ContainsRule;
 import com.bame.secondchat.data.FilterRule;
 import com.bame.secondchat.data.StartsWithRule;
+import com.bame.secondchat.data.CapturesBlockRule;
 import com.google.gson.*;
 
 import java.lang.reflect.Type;
@@ -28,8 +29,10 @@ public class FilterRuleAdapter implements JsonSerializer<FilterRule>, JsonDeseri
                 return new ContainsRule(value);
             case "starts_with":
                 return new StartsWithRule(value);
+            case "captures_block":
+                return new CapturesBlockRule(value);
             default:
-                throw new JsonParseException("Unknown FilterRule type: " + type);
+                throw new JsonParseException("Unknown rule type: " + type);
         }
     }
 }
