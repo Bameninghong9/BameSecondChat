@@ -180,7 +180,14 @@ public class EmojiPickerWidget implements Drawable {
                 
                 if (mouseX >= cellX && mouseX < cellX + gridSpacing && mouseY >= cellY && mouseY < cellY + gridSpacing) {
                     if (button == 0) { // Left click
-                        MinecraftClient.getInstance().keyboard.setClipboard(currentSymbols.get(symbolIndex));
+                        String symbol = currentSymbols.get(symbolIndex);
+                        MinecraftClient client = MinecraftClient.getInstance();
+                        if (client.currentScreen instanceof ChatScreen chatScreen) {
+                            TextFieldWidget chatField = ((ChatScreenAccessor) chatScreen).getChatField();
+                            if (chatField != null) {
+                                chatField.write(symbol);
+                            }
+                        }
                         return true;
                     } else if (button == 1) { // Right click
                         String symbol = currentSymbols.get(symbolIndex);
