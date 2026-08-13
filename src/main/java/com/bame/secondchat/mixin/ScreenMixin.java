@@ -33,4 +33,26 @@ public interface ScreenMixin {
             ModConfig.save(); // Save new layout
         }
     }
+    
+    @Inject(method = "keyPressed", at = @At("HEAD"), cancellable = true)
+    default void onKeyPressed(net.minecraft.client.input.KeyInput input, CallbackInfoReturnable<Boolean> cir) {
+        if (!((Object) this instanceof ChatScreen)) return;
+        com.bame.secondchat.gui.EmojiPickerProvider provider = (com.bame.secondchat.gui.EmojiPickerProvider) this;
+        if (provider.getShowEmojiPicker() && provider.getEmojiPickerWidget() != null) {
+            if (provider.getEmojiPickerWidget().keyPressed(input)) {
+                cir.setReturnValue(true);
+            }
+        }
+    }
+    
+    @Inject(method = "charTyped", at = @At("HEAD"), cancellable = true)
+    default void onCharTyped(net.minecraft.client.input.CharInput input, CallbackInfoReturnable<Boolean> cir) {
+        if (!((Object) this instanceof ChatScreen)) return;
+        com.bame.secondchat.gui.EmojiPickerProvider provider = (com.bame.secondchat.gui.EmojiPickerProvider) this;
+        if (provider.getShowEmojiPicker() && provider.getEmojiPickerWidget() != null) {
+            if (provider.getEmojiPickerWidget().charTyped(input)) {
+                cir.setReturnValue(true);
+            }
+        }
+    }
 }

@@ -22,6 +22,7 @@ public class GlobalSettingsScreen extends Screen {
     private ButtonWidget timestampColorResetButton;
     private ButtonWidget selectionColorResetButton;
     private ButtonWidget showFontDropdownButton;
+    private ButtonWidget showEmojiButtonButton;
     
     private ButtonWidget saveButton;
 
@@ -88,6 +89,17 @@ public class GlobalSettingsScreen extends Screen {
             button.setMessage(newText);
         }).dimensions(xOffset, startY + 150, fieldWidth, 20).build();
         this.addDrawableChild(this.showFontDropdownButton);
+        
+        Text initialEmojiText = Text.literal(com.bame.secondchat.config.ModConfig.showEmojiButton ? "Yes" : "No")
+            .withColor(com.bame.secondchat.config.ModConfig.showEmojiButton ? 0x00FF00 : 0xFF0000);
+            
+        this.showEmojiButtonButton = ButtonWidget.builder(initialEmojiText, button -> {
+            com.bame.secondchat.config.ModConfig.showEmojiButton = !com.bame.secondchat.config.ModConfig.showEmojiButton;
+            Text newText = Text.literal(com.bame.secondchat.config.ModConfig.showEmojiButton ? "Yes" : "No")
+                .withColor(com.bame.secondchat.config.ModConfig.showEmojiButton ? 0x00FF00 : 0xFF0000);
+            button.setMessage(newText);
+        }).dimensions(xOffset, startY + 180, fieldWidth, 20).build();
+        this.addDrawableChild(this.showEmojiButtonButton);
         
         this.saveButton = ButtonWidget.builder(Text.literal("Save & Close"), button -> {
             saveSettings();
@@ -174,6 +186,9 @@ public class GlobalSettingsScreen extends Screen {
         boolean showFontDropdownSetting = "font dropdown".contains(search) || search.isEmpty();
         this.showFontDropdownButton.visible = showFontDropdownSetting;
         
+        boolean showEmojiBtnSetting = "emoji button".contains(search) || search.isEmpty();
+        this.showEmojiButtonButton.visible = showEmojiBtnSetting;
+        
         int currentY = startY;
         
         if (showMaxMsg) {
@@ -221,6 +236,12 @@ public class GlobalSettingsScreen extends Screen {
         if (showFontDropdownSetting) {
             context.drawTextWithShadow(this.textRenderer, Text.literal("Show Font Dropdown"), xOffset, currentY - 10, 0xFFAAAAAA);
             this.showFontDropdownButton.setY(currentY);
+            currentY += 40;
+        }
+        
+        if (showEmojiBtnSetting) {
+            context.drawTextWithShadow(this.textRenderer, Text.literal("Show Emoji Button"), xOffset, currentY - 10, 0xFFAAAAAA);
+            this.showEmojiButtonButton.setY(currentY);
             currentY += 40;
         }
         

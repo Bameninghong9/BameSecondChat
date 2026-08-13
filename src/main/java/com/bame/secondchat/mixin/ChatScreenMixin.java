@@ -16,33 +16,116 @@ import org.spongepowered.asm.mixin.Shadow;
 import java.util.List;
 
 @Mixin(ChatScreen.class)
-public abstract class ChatScreenMixin extends net.minecraft.client.gui.screen.Screen {
+public abstract class ChatScreenMixin extends net.minecraft.client.gui.screen.Screen implements com.bame.secondchat.gui.EmojiPickerProvider {
 
     protected ChatScreenMixin(net.minecraft.text.Text title) {
         super(title);
     }
     
     private com.bame.secondchat.gui.FontDropdownWidget fontDropdownWidget;
+    private com.bame.secondchat.gui.EmojiPickerWidget emojiPickerWidget;
+    private boolean showEmojiPicker = false;
+
+    @Override
+    public boolean getShowEmojiPicker() {
+        return this.showEmojiPicker;
+    }
+
+    @Override
+    public com.bame.secondchat.gui.EmojiPickerWidget getEmojiPickerWidget() {
+        return this.emojiPickerWidget;
+    }
 
     @Shadow
     protected abstract boolean handleClickEvent(net.minecraft.text.Style style, boolean insert);
 
     @Inject(method = "render", at = @At("TAIL"))
     private void onRender(net.minecraft.client.gui.DrawContext context, int mouseX, int mouseY, float delta, org.spongepowered.asm.mixin.injection.callback.CallbackInfo ci) {
+        MinecraftClient client = MinecraftClient.getInstance();
+        int screenWidth = client.getWindow().getScaledWidth();
+        int screenHeight = client.getWindow().getScaledHeight();
+
         if (com.bame.secondchat.config.ModConfig.showFontDropdown) {
             if (this.fontDropdownWidget == null) {
-                MinecraftClient client = MinecraftClient.getInstance();
-                int screenWidth = client.getWindow().getScaledWidth();
                 this.fontDropdownWidget = new com.bame.secondchat.gui.FontDropdownWidget(screenWidth - 110, 5, 100, 16);
             }
             this.fontDropdownWidget.render(context, mouseX, mouseY, delta);
         } else {
             this.fontDropdownWidget = null;
         }
+
+        // Render Emoji Button
+        int btnX = screenWidth - 18;
+        int btnY = screenHeight - 16;
+        
+        if (com.bame.secondchat.config.ModConfig.showEmojiButton) {
+            context.fill(btnX, btnY, btnX + 15, btnY + 15, 0x88000000); // 15x15 translucent bg
+            if (this.showEmojiPicker) {
+                context.fill(btnX - 1, btnY - 1, btnX + 16, btnY, 0xFFFFFFFF);
+                context.fill(btnX - 1, btnY + 15, btnX + 16, btnY + 16, 0xFFFFFFFF);
+                context.fill(btnX - 1, btnY, btnX, btnY + 15, 0xFFFFFFFF);
+                context.fill(btnX + 15, btnY, btnX + 16, btnY + 15, 0xFFFFFFFF);
+            }
+            if (mouseX >= btnX && mouseX <= btnX + 16 && mouseY >= btnY && mouseY <= btnY + 16) {
+                context.fill(btnX, btnY, btnX + 16, btnY + 16, 0x88000000);
+            }
+            net.minecraft.util.Identifier smileyId = net.minecraft.util.Identifier.of("bamesecondchat", "smiley");
+            context.drawGuiTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, smileyId, btnX + 1, btnY + 1, 12, 12);
+        }
+
+        if (this.showEmojiPicker) {
+            if (this.emojiPickerWidget == null) {
+                this.emojiPickerWidget = new com.bame.secondchat.gui.EmojiPickerWidget(screenWidth - 124, screenHeight - 120, 116, 100);
+            }
+            this.emojiPickerWidget.render(context, mouseX, mouseY, delta);
+        }
+    }
+
+    @Inject(method = "keyPressed", at = @At("HEAD"), cancellable = true)
+    private void onKeyPressed(net.minecraft.client.input.KeyInput keyInput, CallbackInfoReturnable<Boolean> cir) {
+        if (this.showEmojiPicker && this.emojiPickerWidget != null) {
+            if (this.emojiPickerWidget.keyPressed(keyInput)) {
+                cir.setReturnValue(true);
+            }
+        }
+    }
+
+    @Override
+    public boolean charTyped(net.minecraft.client.input.CharInput charInput) {
+        if (this.showEmojiPicker && this.emojiPickerWidget != null) {
+            if (this.emojiPickerWidget.charTyped(charInput)) {
+                return true;
+            }
+        }
+        return super.charTyped(charInput);
     }
 
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
     private void onMouseClicked(Click click, boolean bl, CallbackInfoReturnable<Boolean> cir) {
+        MinecraftClient client = MinecraftClient.getInstance();
+        int screenWidth = client.getWindow().getScaledWidth();
+        int screenHeight = client.getWindow().getScaledHeight();
+        double mouseX = click.x();
+        double mouseY = click.y();
+        int button = click.button();
+        
+        int btnX = screenWidth - 18;
+        int btnY = screenHeight - 16;
+        if (com.bame.secondchat.config.ModConfig.showEmojiButton) {
+            if (mouseX >= btnX && mouseX <= btnX + 16 && mouseY >= btnY && mouseY <= btnY + 16) {
+                this.showEmojiPicker = !this.showEmojiPicker;
+                cir.setReturnValue(true);
+                return;
+            }
+        }
+
+        if (this.showEmojiPicker && this.emojiPickerWidget != null) {
+            if (this.emojiPickerWidget.mouseClicked(click, bl)) {
+                cir.setReturnValue(true);
+                return;
+            }
+        }
+        
         if (this.fontDropdownWidget != null && com.bame.secondchat.config.ModConfig.showFontDropdown) {
             if (this.fontDropdownWidget.mouseClicked(click, bl)) {
                 cir.setReturnValue(true);
@@ -50,18 +133,11 @@ public abstract class ChatScreenMixin extends net.minecraft.client.gui.screen.Sc
             }
         }
         
-        double mouseX = click.x();
-        double mouseY = click.y();
-        int button = click.button();
-        
         List<ChatTab> tabs = TabManager.getInstance().getTabs();
         ChatTab allTab = TabManager.getInstance().getAllTab();
         ChatTab activeCustomTab = TabManager.getInstance().getActiveCustomTab();
         boolean isAllTabOpen = TabManager.getInstance().isAllTabOpen();
         
-        MinecraftClient client = MinecraftClient.getInstance();
-        int screenHeight = client.getWindow().getScaledHeight();
-
         int hudX = TabManager.getInstance().getHudX();
         int hudY = TabManager.getInstance().getHudY();
         
@@ -269,6 +345,13 @@ public abstract class ChatScreenMixin extends net.minecraft.client.gui.screen.Sc
     
     @Inject(method = "mouseScrolled", at = @At("HEAD"), cancellable = true)
     private void onMouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount, CallbackInfoReturnable<Boolean> cir) {
+        if (this.showEmojiPicker && this.emojiPickerWidget != null) {
+            if (this.emojiPickerWidget.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)) {
+                cir.setReturnValue(true);
+                return;
+            }
+        }
+        
         ChatTab allTab = TabManager.getInstance().getAllTab();
         ChatTab activeCustomTab = TabManager.getInstance().getActiveCustomTab();
         boolean isAllTabOpen = TabManager.getInstance().isAllTabOpen();

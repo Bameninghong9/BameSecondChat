@@ -11,6 +11,7 @@ public class BameSecondChat implements ClientModInitializer {
     public void onInitializeClient() {
         ModConfig.load();
         com.bame.secondchat.config.GlobalConfig.load();
+        com.bame.secondchat.util.EmojiManager.load();
         
         HudRenderCallback.EVENT.register(new TabHudRenderer());
         

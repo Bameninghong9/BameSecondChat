@@ -6,7 +6,7 @@
   "client": [
     "ChatHudMixin",
     "ChatScreenMixin",
-    "ClientPlayNetworkHandlerMixin",
+    "ClientPlayNetworkHandlerMixin", "ChatScreenAccessor",
     "TextFieldWidgetMixin"
   ],
   "injectors": {
