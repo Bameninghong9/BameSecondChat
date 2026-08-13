@@ -142,11 +142,23 @@ public class CustomChatHud {
             int alphaInt = (int)(255.0 * alpha);
             int color = (alphaInt << 24) | 0xFFFFFF;
             
+            net.minecraft.util.Identifier playerSkin = com.bame.secondchat.config.ModConfig.showPlayerHeads ? msg.getPlayerSkin() : null;
+            
             for (int l = wrappedLines.size() - 1; l >= 0; l--) {
                 if (linesDrawn >= maxLines) break;
                 
                 int renderY = startY + height - ((linesDrawn + 1) * lineHeight);
                 boolean isLineHovered = chatOpen && mouseX >= x && mouseX <= x + width && mouseY >= renderY && mouseY < renderY + lineHeight;
+                
+                int xOffset = 0;
+                if (l == 0 && playerSkin != null) {
+                    xOffset = 10;
+                    if (alphaInt > 0) {
+                        drawContext.drawTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, playerSkin, x + 2, renderY + 1, 8.0f, 8.0f, 8, 8, 64, 64);
+                        // Also draw the hat layer (u=40, v=8)
+                        drawContext.drawTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, playerSkin, x + 2, renderY + 1, 40.0f, 8.0f, 8, 8, 64, 64);
+                    }
+                }
                 
                 if (isLineHovered) {
                     hoveredMessage = msg;
@@ -183,7 +195,7 @@ public class CustomChatHud {
                 }
                 
                 if (alphaInt > 0) {
-                    drawContext.drawTextWithShadow(client.textRenderer, wrappedLines.get(l), x + 2, renderY + 2, color);
+                    drawContext.drawTextWithShadow(client.textRenderer, wrappedLines.get(l), x + 2 + xOffset, renderY + 2, color);
                 }
                 
                 linesDrawn++;

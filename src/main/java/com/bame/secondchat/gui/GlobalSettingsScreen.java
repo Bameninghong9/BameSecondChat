@@ -23,6 +23,7 @@ public class GlobalSettingsScreen extends Screen {
     private ButtonWidget selectionColorResetButton;
     private ButtonWidget showFontDropdownButton;
     private ButtonWidget showEmojiButtonButton;
+    private ButtonWidget showPlayerHeadsButton;
     
     private ButtonWidget saveButton;
 
@@ -100,6 +101,17 @@ public class GlobalSettingsScreen extends Screen {
             button.setMessage(newText);
         }).dimensions(xOffset, startY + 180, fieldWidth, 20).build();
         this.addDrawableChild(this.showEmojiButtonButton);
+        
+        Text initialHeadsText = Text.literal(com.bame.secondchat.config.ModConfig.showPlayerHeads ? "Yes" : "No")
+            .withColor(com.bame.secondchat.config.ModConfig.showPlayerHeads ? 0x00FF00 : 0xFF0000);
+            
+        this.showPlayerHeadsButton = ButtonWidget.builder(initialHeadsText, button -> {
+            com.bame.secondchat.config.ModConfig.showPlayerHeads = !com.bame.secondchat.config.ModConfig.showPlayerHeads;
+            Text newText = Text.literal(com.bame.secondchat.config.ModConfig.showPlayerHeads ? "Yes" : "No")
+                .withColor(com.bame.secondchat.config.ModConfig.showPlayerHeads ? 0x00FF00 : 0xFF0000);
+            button.setMessage(newText);
+        }).dimensions(xOffset, startY + 210, fieldWidth, 20).build();
+        this.addDrawableChild(this.showPlayerHeadsButton);
         
         this.saveButton = ButtonWidget.builder(Text.literal("Save & Close"), button -> {
             saveSettings();
@@ -189,6 +201,9 @@ public class GlobalSettingsScreen extends Screen {
         boolean showEmojiBtnSetting = "emoji button".contains(search) || search.isEmpty();
         this.showEmojiButtonButton.visible = showEmojiBtnSetting;
         
+        boolean showHeadsBtnSetting = "player heads skin".contains(search) || search.isEmpty();
+        this.showPlayerHeadsButton.visible = showHeadsBtnSetting;
+        
         int currentY = startY;
         
         if (showMaxMsg) {
@@ -242,6 +257,12 @@ public class GlobalSettingsScreen extends Screen {
         if (showEmojiBtnSetting) {
             context.drawTextWithShadow(this.textRenderer, Text.literal("Show Emoji Button"), xOffset, currentY - 10, 0xFFAAAAAA);
             this.showEmojiButtonButton.setY(currentY);
+            currentY += 40;
+        }
+        
+        if (showHeadsBtnSetting) {
+            context.drawTextWithShadow(this.textRenderer, Text.literal("Show Player Heads"), xOffset, currentY - 10, 0xFFAAAAAA);
+            this.showPlayerHeadsButton.setY(currentY);
             currentY += 40;
         }
         

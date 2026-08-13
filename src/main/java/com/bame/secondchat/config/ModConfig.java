@@ -25,12 +25,14 @@ public class ModConfig {
     
     public static boolean showFontDropdown = true;
     public static boolean showEmojiButton = true;
+    public static boolean showPlayerHeads = false;
 
     public static class ConfigData {
         public int hudX = -1;
         public int hudY = -1;
         public boolean showFontDropdown = true;
         public boolean showEmojiButton = true;
+        public boolean showPlayerHeads = false;
         public List<ChatTab> tabs;
     }
 
@@ -49,6 +51,7 @@ public class ModConfig {
                     // We will just keep it statically accessible
                     ModConfig.showFontDropdown = data.showFontDropdown;
                     ModConfig.showEmojiButton = data.showEmojiButton;
+                    ModConfig.showPlayerHeads = data.showPlayerHeads;
                 }
             } catch (Exception e) {
                 System.err.println("[BameSecondChat] Failed to load config, saving defaults: " + e.getMessage());
@@ -67,6 +70,7 @@ public class ModConfig {
             data.hudY = TabManager.getInstance().getHudY();
             data.showFontDropdown = ModConfig.showFontDropdown;
             data.showEmojiButton = ModConfig.showEmojiButton;
+            data.showPlayerHeads = ModConfig.showPlayerHeads;
             
             data.tabs = TabManager.getInstance().getTabs();
             
