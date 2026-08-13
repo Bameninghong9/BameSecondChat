@@ -8,6 +8,7 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.RenderTickCounter;
 
 import java.util.List;
+import java.util.ArrayList;
 
 public class TabHudRenderer implements HudRenderCallback {
 
@@ -20,13 +21,14 @@ public class TabHudRenderer implements HudRenderCallback {
         
         handleDragging(client);
         
+        List<ChatTab> openTabs = new ArrayList<>();
         if (TabManager.getInstance().isAllTabOpen()) {
-            customChatHud.render(drawContext, tickCounter, TabManager.getInstance().getAllTab());
+            openTabs.add(TabManager.getInstance().getAllTab());
         }
+        openTabs.addAll(TabManager.getInstance().getActiveCustomTabs());
         
-        ChatTab activeCustomTab = TabManager.getInstance().getActiveCustomTab();
-        if (activeCustomTab != null) {
-            customChatHud.render(drawContext, tickCounter, activeCustomTab);
+        for (ChatTab tab : openTabs) {
+            customChatHud.render(drawContext, tickCounter, tab);
         }
         
         CustomChatHud.updateKeyStates(client);
@@ -125,7 +127,6 @@ public class TabHudRenderer implements HudRenderCallback {
 
     private void renderTabBar(DrawContext drawContext) {
         List<ChatTab> tabs = TabManager.getInstance().getTabs();
-        ChatTab activeTab = TabManager.getInstance().getActiveTab();
 
         MinecraftClient client = MinecraftClient.getInstance();
 
@@ -140,7 +141,7 @@ public class TabHudRenderer implements HudRenderCallback {
             
             boolean isActive = (tab == TabManager.getInstance().getAllTab()) ? 
                                 TabManager.getInstance().isAllTabOpen() : 
-                                (tab == TabManager.getInstance().getActiveCustomTab());
+                                TabManager.getInstance().getActiveCustomTabs().contains(tab);
             
             int searchIconWidth = isActive ? client.textRenderer.getWidth("🔍") + 8 : 0;
             int totalTabWidth = width + searchIconWidth;
@@ -206,9 +207,11 @@ public class TabHudRenderer implements HudRenderCallback {
             drawResizeHandle(drawContext, TabManager.getInstance().getAllTab());
         }
         
-        ChatTab activeCustomTab = TabManager.getInstance().getActiveCustomTab();
-        if (activeCustomTab != null && client.currentScreen instanceof net.minecraft.client.gui.screen.ChatScreen) {
-            drawResizeHandle(drawContext, activeCustomTab);
+        List<ChatTab> activeCustomTabs = TabManager.getInstance().getActiveCustomTabs();
+        if (client.currentScreen instanceof net.minecraft.client.gui.screen.ChatScreen) {
+            for (ChatTab activeCustomTab : activeCustomTabs) {
+                drawResizeHandle(drawContext, activeCustomTab);
+            }
         }
     }
     

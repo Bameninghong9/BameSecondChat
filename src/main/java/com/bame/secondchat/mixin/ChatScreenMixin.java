@@ -75,7 +75,7 @@ public abstract class ChatScreenMixin extends net.minecraft.client.gui.screen.Sc
         }
 
         java.util.List<ChatTab> openTabs = new java.util.ArrayList<>();
-        if (TabManager.getInstance().getActiveCustomTab() != null) openTabs.add(TabManager.getInstance().getActiveCustomTab());
+        openTabs.addAll(TabManager.getInstance().getActiveCustomTabs());
         if (TabManager.getInstance().isAllTabOpen()) openTabs.add(TabManager.getInstance().getAllTab());
 
         for (ChatTab activeT : openTabs) {
@@ -108,7 +108,7 @@ public abstract class ChatScreenMixin extends net.minecraft.client.gui.screen.Sc
     @Inject(method = "keyPressed", at = @At("HEAD"), cancellable = true)
     private void onKeyPressed(net.minecraft.client.input.KeyInput keyInput, CallbackInfoReturnable<Boolean> cir) {
         java.util.List<ChatTab> openTabs = new java.util.ArrayList<>();
-        if (TabManager.getInstance().getActiveCustomTab() != null) openTabs.add(TabManager.getInstance().getActiveCustomTab());
+        openTabs.addAll(TabManager.getInstance().getActiveCustomTabs());
         if (TabManager.getInstance().isAllTabOpen()) openTabs.add(TabManager.getInstance().getAllTab());
         
         for (ChatTab activeT : openTabs) {
@@ -134,7 +134,7 @@ public abstract class ChatScreenMixin extends net.minecraft.client.gui.screen.Sc
     @Override
     public boolean charTyped(net.minecraft.client.input.CharInput charInput) {
         java.util.List<ChatTab> openTabs = new java.util.ArrayList<>();
-        if (TabManager.getInstance().getActiveCustomTab() != null) openTabs.add(TabManager.getInstance().getActiveCustomTab());
+        openTabs.addAll(TabManager.getInstance().getActiveCustomTabs());
         if (TabManager.getInstance().isAllTabOpen()) openTabs.add(TabManager.getInstance().getAllTab());
         
         for (ChatTab activeT : openTabs) {
@@ -177,7 +177,7 @@ public abstract class ChatScreenMixin extends net.minecraft.client.gui.screen.Sc
         }
 
         java.util.List<ChatTab> openTabsSearch = new java.util.ArrayList<>();
-        if (TabManager.getInstance().getActiveCustomTab() != null) openTabsSearch.add(TabManager.getInstance().getActiveCustomTab());
+        openTabsSearch.addAll(TabManager.getInstance().getActiveCustomTabs());
         if (TabManager.getInstance().isAllTabOpen()) openTabsSearch.add(TabManager.getInstance().getAllTab());
         
         for (ChatTab activeT : openTabsSearch) {
@@ -211,7 +211,7 @@ public abstract class ChatScreenMixin extends net.minecraft.client.gui.screen.Sc
         
         List<ChatTab> tabs = TabManager.getInstance().getTabs();
         ChatTab allTab = TabManager.getInstance().getAllTab();
-        ChatTab activeCustomTab = TabManager.getInstance().getActiveCustomTab();
+        List<ChatTab> activeCustomTabs = TabManager.getInstance().getActiveCustomTabs();
         boolean isAllTabOpen = TabManager.getInstance().isAllTabOpen();
         
         int hudX = TabManager.getInstance().getHudX();
@@ -221,7 +221,7 @@ public abstract class ChatScreenMixin extends net.minecraft.client.gui.screen.Sc
         for (ChatTab tab : tabs) {
             boolean isActive = (tab == TabManager.getInstance().getAllTab()) ? 
                                 TabManager.getInstance().isAllTabOpen() : 
-                                (tab == TabManager.getInstance().getActiveCustomTab());
+                                TabManager.getInstance().getActiveCustomTabs().contains(tab);
                                 
             int nameWidth = client.textRenderer.getWidth(tab.getName()) + 12;
             if (tab.getUnreadCount() > 0) {
@@ -281,9 +281,9 @@ public abstract class ChatScreenMixin extends net.minecraft.client.gui.screen.Sc
         }
         
         // Let's create a list of open tabs to check clicks inside them.
-        // We add activeCustomTab first, then allTab, so custom tab has priority if they overlap.
+        // We add activeCustomTabs first, then allTab, so custom tab has priority if they overlap.
         java.util.List<ChatTab> openTabs = new java.util.ArrayList<>();
-        if (activeCustomTab != null) openTabs.add(activeCustomTab);
+        openTabs.addAll(activeCustomTabs);
         if (isAllTabOpen) openTabs.add(allTab);
         
         for (ChatTab activeTab : openTabs) {
@@ -464,11 +464,11 @@ public abstract class ChatScreenMixin extends net.minecraft.client.gui.screen.Sc
         }
         
         ChatTab allTab = TabManager.getInstance().getAllTab();
-        ChatTab activeCustomTab = TabManager.getInstance().getActiveCustomTab();
+        List<ChatTab> activeCustomTabs = TabManager.getInstance().getActiveCustomTabs();
         boolean isAllTabOpen = TabManager.getInstance().isAllTabOpen();
         
         java.util.List<ChatTab> openTabs = new java.util.ArrayList<>();
-        if (activeCustomTab != null) openTabs.add(activeCustomTab);
+        openTabs.addAll(activeCustomTabs);
         if (isAllTabOpen) openTabs.add(allTab);
         
         for (ChatTab activeTab : openTabs) {

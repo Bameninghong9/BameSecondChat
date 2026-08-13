@@ -8,7 +8,7 @@ public class TabManager {
     
     private final List<ChatTab> tabs = new ArrayList<>();
     private boolean isAllTabOpen = true;
-    private ChatTab activeCustomTab = null;
+    private final List<ChatTab> activeCustomTabs = new ArrayList<>();
     
     private long blockCaptureUntil = 0;
     private ChatTab blockCaptureTab = null;
@@ -32,10 +32,6 @@ public class TabManager {
         return tabs;
     }
 
-    public ChatTab getActiveTab() {
-        return activeCustomTab;
-    }
-
     public void setActiveTab(ChatTab tab) {
         if (tab == allTab) {
             isAllTabOpen = !isAllTabOpen;
@@ -43,10 +39,10 @@ public class TabManager {
                 allTab.resetUnread();
             }
         } else {
-            if (this.activeCustomTab == tab) {
-                this.activeCustomTab = null;
+            if (activeCustomTabs.contains(tab)) {
+                activeCustomTabs.remove(tab);
             } else {
-                this.activeCustomTab = tab;
+                activeCustomTabs.add(tab);
                 if (tab != null) {
                     tab.resetUnread();
                 }
@@ -58,8 +54,8 @@ public class TabManager {
         return isAllTabOpen;
     }
     
-    public ChatTab getActiveCustomTab() {
-        return activeCustomTab;
+    public List<ChatTab> getActiveCustomTabs() {
+        return activeCustomTabs;
     }
 
     public ChatTab getAllTab() {
@@ -75,9 +71,7 @@ public class TabManager {
     public void removeTab(ChatTab tab) {
         if (tab != allTab) {
             tabs.remove(tab);
-            if (activeCustomTab == tab) {
-                activeCustomTab = null;
-            }
+            activeCustomTabs.remove(tab);
         }
     }
 
@@ -93,7 +87,7 @@ public class TabManager {
         
         if (now < blockCaptureUntil && blockCaptureTab != null) {
             blockCaptureTab.addMessage(message);
-            if (blockCaptureTab != activeCustomTab) {
+            if (!activeCustomTabs.contains(blockCaptureTab)) {
                 blockCaptureTab.incrementUnread();
             }
             if (blockCaptureTab.isHideFromAll()) {
@@ -121,7 +115,7 @@ public class TabManager {
 
             if (matches) {
                 tab.addMessage(message);
-                if (tab != activeCustomTab) {
+                if (!activeCustomTabs.contains(tab)) {
                     tab.incrementUnread();
                 }
                 
@@ -166,7 +160,7 @@ public class TabManager {
         }
         
         isAllTabOpen = true;
-        activeCustomTab = null;
+        activeCustomTabs.clear();
     }
 
     public void updateTab(ChatTab tab, String newName, boolean hideFromAll, List<FilterRule> newRules) {
