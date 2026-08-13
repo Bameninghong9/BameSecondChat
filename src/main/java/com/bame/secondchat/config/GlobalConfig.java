@@ -16,6 +16,7 @@ public class GlobalConfig {
     public String timestampFormat = "dd.MM.yyyy HH:mm 'Uhr'";
     public String timestampColor = "#AAAAAA"; // default grey
     public String selectionColor = "#880000FF"; // default transparent blue
+    public int chatBackgroundOpacity = 40; // 0 = invisible, 100 = black
 
     private static GlobalConfig instance;
     private static final File CONFIG_FILE = new File(FabricLoader.getInstance().getConfigDir().toFile(), "secondchat_global.json");

@@ -116,7 +116,9 @@ public class CustomChatHud {
             maxLines = Math.min(maxLines, 11);
         }
 
-        int bg = 0x66000000;
+        int opacity = com.bame.secondchat.config.GlobalConfig.getInstance().chatBackgroundOpacity;
+        int bgAlpha = (int) (opacity / 100.0 * 255.0);
+        int bg = (bgAlpha << 24);
         if (!shouldFade) {
             drawContext.fill(x, startY, x + width, startY + height, bg);
         }
@@ -206,7 +208,8 @@ public class CustomChatHud {
                 }
                 
                 if (shouldFade && alphaInt > 0) {
-                    drawContext.fill(x, renderY, x + width, renderY + lineHeight, (int)(alphaInt * 0.5) << 24);
+                    int fadeAlpha = (int) (alphaInt * (opacity / 100.0));
+                    drawContext.fill(x, renderY, x + width, renderY + lineHeight, fadeAlpha << 24);
                 }
                 
                 if (alphaInt > 0) {

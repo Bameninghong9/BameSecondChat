@@ -23,6 +23,7 @@ public class GlobalSettingsScreen extends Screen {
     private ButtonWidget showFontDropdownButton;
     private ButtonWidget showEmojiButtonButton;
     private ButtonWidget showPlayerHeadsButton;
+    private net.minecraft.client.gui.widget.SliderWidget opacitySlider;
     
     private ButtonWidget saveButton;
 
@@ -111,6 +112,19 @@ public class GlobalSettingsScreen extends Screen {
             button.setMessage(newText);
         }).dimensions(xOffset, startY + 210, fieldWidth, 20).build();
         this.addDrawableChild(this.showPlayerHeadsButton);
+
+        this.opacitySlider = new net.minecraft.client.gui.widget.SliderWidget(xOffset, startY + 240, fieldWidth, 20, Text.literal("Text Background Opacity: " + config.chatBackgroundOpacity + "%"), config.chatBackgroundOpacity / 100.0) {
+            @Override
+            protected void updateMessage() {
+                this.setMessage(Text.literal("Text Background Opacity: " + (int)(this.value * 100) + "%"));
+            }
+
+            @Override
+            protected void applyValue() {
+                config.chatBackgroundOpacity = (int)(this.value * 100);
+            }
+        };
+        this.addDrawableChild(this.opacitySlider);
         
         this.saveButton = ButtonWidget.builder(Text.literal("Save & Close"), button -> {
             saveSettings();
@@ -203,6 +217,9 @@ public class GlobalSettingsScreen extends Screen {
         boolean showHeadsBtnSetting = "player heads skin".contains(search) || search.isEmpty();
         this.showPlayerHeadsButton.visible = showHeadsBtnSetting;
         
+        boolean showOpacitySetting = "opacity deckkraft background".contains(search) || search.isEmpty();
+        this.opacitySlider.visible = showOpacitySetting;
+        
         int currentY = startY;
         
         if (showMaxMsg) {
@@ -262,6 +279,12 @@ public class GlobalSettingsScreen extends Screen {
         if (showHeadsBtnSetting) {
             context.drawTextWithShadow(this.textRenderer, Text.literal("Show Player Heads"), xOffset, currentY - 10, 0xFFAAAAAA);
             this.showPlayerHeadsButton.setY(currentY);
+            currentY += 40;
+        }
+        
+        if (showOpacitySetting) {
+            context.drawTextWithShadow(this.textRenderer, Text.literal("Text Background Opacity"), xOffset, currentY - 10, 0xFFAAAAAA);
+            this.opacitySlider.setY(currentY);
             currentY += 40;
         }
         
