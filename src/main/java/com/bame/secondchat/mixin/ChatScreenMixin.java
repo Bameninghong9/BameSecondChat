@@ -75,7 +75,7 @@ public abstract class ChatScreenMixin extends net.minecraft.client.gui.screen.Sc
 
         if (this.showEmojiPicker) {
             if (this.emojiPickerWidget == null) {
-                this.emojiPickerWidget = new com.bame.secondchat.gui.EmojiPickerWidget(screenWidth - 124, screenHeight - 120, 116, 100);
+                this.emojiPickerWidget = new com.bame.secondchat.gui.EmojiPickerWidget(screenWidth, screenHeight);
             }
             this.emojiPickerWidget.render(context, mouseX, mouseY, delta);
         }

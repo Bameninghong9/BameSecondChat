@@ -1,17 +1,13 @@
 package com.bame.secondchat.util;
 
-import com.bame.secondchat.data.ChatMessage;
-import net.minecraft.text.Style;
 
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
-import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 import java.util.List;
-import java.util.Optional;
 
 public class ClipboardImageUtil {
 

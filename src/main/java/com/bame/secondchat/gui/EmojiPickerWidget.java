@@ -22,16 +22,16 @@ public class EmojiPickerWidget implements Drawable {
     private List<String> currentSymbols;
     
     private int scrollOffset = 0;
-    private final int columns = 8;
+    private final int columns = 10;
     private final int symbolSize = 12;
-    private final int gridSpacing = 13; 
-    private final int rows = 6;
+    private final int gridSpacing = 14; 
+    private final int rows = 8;
     
-    public EmojiPickerWidget(int x, int y, int width, int height) {
-        this.x = x;
-        this.y = y;
-        this.width = columns * gridSpacing + 12; // 8 * 13 + 12 = 116
-        this.height = height;
+    public EmojiPickerWidget(int screenWidth, int screenHeight) {
+        this.width = columns * gridSpacing + 12; // 10 * 14 + 12 = 152
+        this.height = rows * gridSpacing + 32 + 4; // 8 * 14 + 36 = 148
+        this.x = screenWidth - this.width - 6; // 6 pixels margin right
+        this.y = screenHeight - this.height - 24; // Above the chat input bar
         
         MinecraftClient client = MinecraftClient.getInstance();
         this.searchBox = new TextFieldWidget(client.textRenderer, this.x + 2, this.y + 16, this.width - 4, 12, Text.literal("Search..."));
@@ -90,6 +90,7 @@ public class EmojiPickerWidget implements Drawable {
         
         int gridX = x + 2;
         int gridY = y + 32;
+        String hoveredSymbol = null;
         
         // Draw grid of symbols
         for (int i = 0; i < rows * columns; i++) {
@@ -98,15 +99,12 @@ public class EmojiPickerWidget implements Drawable {
             
             String symbol = currentSymbols.get(symbolIndex);
             
-            int col = i % columns;
-            int row = i / columns;
+            int cellX = x + 2 + (i % columns) * gridSpacing;
+            int cellY = gridY + (i / columns) * gridSpacing;
             
-            int cellX = gridX + col * gridSpacing;
-            int cellY = gridY + row * gridSpacing;
-            
-            // Highlight if hovered
             if (mouseX >= cellX && mouseX < cellX + gridSpacing && mouseY >= cellY && mouseY < cellY + gridSpacing) {
                 context.fill(cellX, cellY, cellX + gridSpacing, cellY + gridSpacing, 0x44FFFFFF);
+                hoveredSymbol = symbol;
             }
             
             int textWidth = client.textRenderer.getWidth(symbol);
@@ -129,9 +127,18 @@ public class EmojiPickerWidget implements Drawable {
             int thumbY = scrollbarY + (int)(((float)scrollOffset / maxScroll) * (scrollbarHeight - thumbHeight));
             context.fill(scrollbarX, thumbY, scrollbarX + 4, thumbY + thumbHeight, 0xAAFFFFFF);
         }
+        
+        if (hoveredSymbol != null) {
+            String name = Character.getName(hoveredSymbol.codePointAt(0));
+            if (name == null || name.isEmpty()) name = "Unknown Symbol";
+            // Capitalize properly
+            name = java.util.Arrays.stream(name.toLowerCase().split(" ")).map(s -> s.substring(0, 1).toUpperCase() + s.substring(1)).collect(java.util.stream.Collectors.joining(" "));
+            
+            context.drawTooltip(MinecraftClient.getInstance().textRenderer, net.minecraft.text.Text.literal(name), mouseX, mouseY);
+        }
     }
 
-    public boolean mouseClicked(Click click, boolean bl) {
+    public boolean mouseClicked(net.minecraft.client.gui.Click click, boolean bl) {
         if (this.searchBox.mouseClicked(click, bl)) {
             this.searchBox.setFocused(true);
             return true;
@@ -141,6 +148,7 @@ public class EmojiPickerWidget implements Drawable {
         
         double mouseX = click.x();
         double mouseY = click.y();
+        int button = click.button();
         
         if (mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height) {
             
@@ -167,19 +175,31 @@ public class EmojiPickerWidget implements Drawable {
                 int symbolIndex = scrollOffset * columns + i;
                 if (symbolIndex >= currentSymbols.size()) break;
                 
-                int col = i % columns;
-                int row = i / columns;
-                
-                int cellX = gridX + col * gridSpacing;
-                int cellY = gridY + row * gridSpacing;
+                int cellX = gridX + (i % columns) * gridSpacing;
+                int cellY = gridY + (i / columns) * gridSpacing;
                 
                 if (mouseX >= cellX && mouseX < cellX + gridSpacing && mouseY >= cellY && mouseY < cellY + gridSpacing) {
-                    String symbol = currentSymbols.get(symbolIndex);
-                    insertSymbol(symbol);
-                    return true;
+                    if (button == 0) { // Left click
+                        MinecraftClient.getInstance().keyboard.setClipboard(currentSymbols.get(symbolIndex));
+                        return true;
+                    } else if (button == 1) { // Right click
+                        String symbol = currentSymbols.get(symbolIndex);
+                        java.util.List<String> favs = com.bame.secondchat.config.GlobalConfig.getInstance().favoriteEmojis;
+                        if (favs.contains(symbol)) {
+                            favs.remove(symbol);
+                        } else {
+                            favs.add(symbol);
+                        }
+                        com.bame.secondchat.config.GlobalConfig.getInstance().save();
+                        
+                        // If we are currently in the favorites tab, refresh the view
+                        if (activeCategory != null && "favorites".equals(activeCategory.name)) {
+                            this.currentSymbols = EmojiManager.getCategories().stream().filter(c -> c.name.equals("favorites")).findFirst().get().symbols;
+                        }
+                        return true;
+                    }
                 }
             }
-            
             return true; // Clicked inside picker but not on anything interactive
         }
         

@@ -1,8 +1,6 @@
 package com.bame.secondchat.mixin;
 
 import com.bame.secondchat.config.ModConfig;
-import com.bame.secondchat.data.ChatTab;
-import com.bame.secondchat.data.TabManager;
 import com.bame.secondchat.gui.DragState;
 import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.Element;

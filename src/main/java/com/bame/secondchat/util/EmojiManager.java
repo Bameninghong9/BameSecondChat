@@ -1,8 +1,6 @@
 package com.bame.secondchat.util;
 
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.resource.Resource;
-import net.minecraft.util.Identifier;
 import org.apache.commons.io.IOUtils;
 
 import java.io.InputStream;
@@ -11,7 +9,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 public class EmojiManager {
     
@@ -45,6 +42,8 @@ public class EmojiManager {
     public static void load() {
         if (!CATEGORIES.isEmpty()) return; // Already loaded
 
+        CATEGORIES.put("favorites", new EmojiCategory("favorites", "favorites", new ArrayList<>()));
+
         for (Map.Entry<String, String[]> entry : CATEGORY_GROUPS.entrySet()) {
             String catName = entry.getKey();
             List<String> symbols = new ArrayList<>();
@@ -77,6 +76,10 @@ public class EmojiManager {
     }
 
     public static List<EmojiCategory> getCategories() {
+        EmojiCategory favs = CATEGORIES.get("favorites");
+        if (favs != null) {
+            favs.symbols = new ArrayList<>(com.bame.secondchat.config.GlobalConfig.getInstance().favoriteEmojis);
+        }
         return new ArrayList<>(CATEGORIES.values());
     }
 
