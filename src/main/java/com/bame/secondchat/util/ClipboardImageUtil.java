@@ -16,9 +16,36 @@ public class ClipboardImageUtil {
             return;
         }
 
-        int lineHeight = 20;
+        net.minecraft.client.MinecraftClient client = net.minecraft.client.MinecraftClient.getInstance();
+        Font font = new Font("SansSerif", Font.BOLD, 15);
         int padding = 10;
-        int width = chatWidth > 0 ? chatWidth : 800;
+        int lineHeight = 20;
+
+        // Calculate maximum width needed
+        int maxWidth = 0;
+        BufferedImage dummyImg = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D dummyG2d = dummyImg.createGraphics();
+        dummyG2d.setFont(font);
+        FontMetrics dummyFm = dummyG2d.getFontMetrics();
+
+        for (com.bame.secondchat.data.SelectedLine sl : selectedLines) {
+            java.util.List<net.minecraft.text.OrderedText> wrappedLines = client.textRenderer.wrapLines(sl.getMessage().getRenderedMessage(), chatWidth - 8);
+            if (sl.getLineIndex() >= 0 && sl.getLineIndex() < wrappedLines.size()) {
+                net.minecraft.text.OrderedText orderedText = wrappedLines.get(sl.getLineIndex());
+                final int[] currentX = {0};
+                orderedText.accept((index, style, codePoint) -> {
+                    String string = new String(Character.toChars(codePoint));
+                    currentX[0] += dummyFm.stringWidth(string);
+                    return true;
+                });
+                if (currentX[0] > maxWidth) {
+                    maxWidth = currentX[0];
+                }
+            }
+        }
+        dummyG2d.dispose();
+
+        int width = Math.max(chatWidth, maxWidth + (padding * 2));
         int height = (selectedLines.size() * lineHeight) + (padding * 2);
 
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
@@ -27,18 +54,13 @@ public class ClipboardImageUtil {
         // Anti-aliasing for text
         g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
-        // Background
-        g2d.setColor(new Color(40, 40, 40, 200)); // Dark grey background like minecraft chat
+        // Background (Solid dark grey)
+        g2d.setColor(new Color(20, 20, 20, 255));
         g2d.fillRect(0, 0, width, height);
 
-        // Font
-        Font font = new Font("Monospaced", Font.PLAIN, 14);
         g2d.setFont(font);
         FontMetrics fm = g2d.getFontMetrics();
-
         int currentY = padding + fm.getAscent();
-
-        net.minecraft.client.MinecraftClient client = net.minecraft.client.MinecraftClient.getInstance();
 
         for (com.bame.secondchat.data.SelectedLine sl : selectedLines) {
             final int[] currentX = {padding};
@@ -54,9 +76,17 @@ public class ClipboardImageUtil {
                         rgb = style.getColor().getRgb();
                     }
                     
-                    g2d.setColor(new Color(rgb));
                     String string = new String(Character.toChars(codePoint));
+                    Color mainColor = new Color(rgb);
+                    
+                    // Shadow (shifted by 1px right and 1px down, color divided by 4)
+                    g2d.setColor(new Color(mainColor.getRed() / 4, mainColor.getGreen() / 4, mainColor.getBlue() / 4, 255));
+                    g2d.drawString(string, currentX[0] + 1, y + 1);
+                    
+                    // Main text
+                    g2d.setColor(mainColor);
                     g2d.drawString(string, currentX[0], y);
+                    
                     currentX[0] += fm.stringWidth(string);
                     
                     return true;
