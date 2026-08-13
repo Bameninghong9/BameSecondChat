@@ -136,26 +136,30 @@ public class TabHudRenderer implements HudRenderCallback {
                 width += client.textRenderer.getWidth(String.valueOf(tab.getUnreadCount())) + 6;
             }
             
+            boolean isActive = (tab == TabManager.getInstance().getAllTab()) ? 
+                                TabManager.getInstance().isAllTabOpen() : 
+                                (tab == TabManager.getInstance().getActiveCustomTab());
+            
+            int searchIconWidth = isActive ? client.textRenderer.getWidth("🔍") + 8 : 0;
+            int totalTabWidth = width + searchIconWidth;
+            
             int height = 14;
             
             int xOffset = tab.getX();
             int yOffset = tab.getY();
             
-            boolean isActive = (tab == TabManager.getInstance().getAllTab()) ? 
-                                TabManager.getInstance().isAllTabOpen() : 
-                                (tab == TabManager.getInstance().getActiveCustomTab());
             
             // Aktiver Tab Hintergrund: Helles Grau/Blau mit hoher Deckkraft. Inaktiv: Schwarz transparent
             int bgColor = isActive ? 0xCC202040 : 0x88000000;
-            drawContext.fill(xOffset, yOffset, xOffset + width, yOffset + height, bgColor);
+            drawContext.fill(xOffset, yOffset, xOffset + totalTabWidth, yOffset + height, bgColor);
             
             if (isActive) {
                 // Zeichne einen feinen Rand um den aktiven Tab
                 int borderColor = 0xFF5555FF;
-                drawContext.fill(xOffset, yOffset, xOffset + width, yOffset + 1, borderColor); // Top
-                drawContext.fill(xOffset, yOffset + height - 1, xOffset + width, yOffset + height, borderColor); // Bottom
+                drawContext.fill(xOffset, yOffset, xOffset + totalTabWidth, yOffset + 1, borderColor); // Top
+                drawContext.fill(xOffset, yOffset + height - 1, xOffset + totalTabWidth, yOffset + height, borderColor); // Bottom
                 drawContext.fill(xOffset, yOffset, xOffset + 1, yOffset + height, borderColor); // Left
-                drawContext.fill(xOffset + width - 1, yOffset, xOffset + width, yOffset + height, borderColor); // Right
+                drawContext.fill(xOffset + totalTabWidth - 1, yOffset, xOffset + totalTabWidth, yOffset + height, borderColor); // Right
             }
             
             // Textfarbe: Weiß für aktiv, grauer für inaktiv
@@ -170,14 +174,25 @@ public class TabHudRenderer implements HudRenderCallback {
                 drawContext.fill(badgeX - 2, yOffset + 2, badgeX + badgeWidth + 2, yOffset + 12, 0xFFFF3333); // Red background
                 drawContext.drawText(client.textRenderer, badge, badgeX, yOffset + 3, 0xFFFFFFFF, true);
             }
+            
+            // Draw search icon only if active
+            if (isActive) {
+                int searchX = xOffset + width;
+                int searchBgColor = tab.isSearchActive() ? 0xCC5555FF : 0x00000000; // Highlight if active
+                drawContext.fill(searchX, yOffset + 1, searchX + searchIconWidth - 1, yOffset + height - 1, searchBgColor);
+                drawContext.drawText(client.textRenderer, "🔍", searchX + 4, yOffset + 3, 0xFFFFFFFF, true);
+            }
         }
         
-        // Render "+" button next to the "All" tab
+        // Render "+" button next to the "All" tab (after its total width including search)
         ChatTab allTab = TabManager.getInstance().getAllTab();
         int allWidth = client.textRenderer.getWidth("All") + 12;
         if (allTab.getUnreadCount() > 0) {
             allWidth += client.textRenderer.getWidth(String.valueOf(allTab.getUnreadCount())) + 6;
         }
+        allWidth += client.textRenderer.getWidth("🔍") + 8; // Search icon width
+        
+        // Render "+" button
         int plusX = allTab.getX() + allWidth + 2;
         int plusY = allTab.getY();
         

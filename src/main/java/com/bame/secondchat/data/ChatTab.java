@@ -23,6 +23,10 @@ public class ChatTab {
     // Unread message count
     private transient int unreadCount = 0;
     
+    // Search state
+    private transient boolean searchActive = false;
+    private transient String searchQuery = "";
+    
     // Selected lines for screenshot feature
     private transient java.util.Set<SelectedLine> selectedLines = new java.util.HashSet<>();
 
@@ -170,6 +174,14 @@ public class ChatTab {
         }
         return this.selectedLines;
     }
+    
+    
+    
+    public boolean isSearchActive() { return searchActive; }
+    public void setSearchActive(boolean searchActive) { this.searchActive = searchActive; }
+    
+    public String getSearchQuery() { return searchQuery == null ? "" : searchQuery; }
+    public void setSearchQuery(String searchQuery) { this.searchQuery = searchQuery == null ? "" : searchQuery; }
     
     public void toggleSelection(ChatMessage msg, int lineIndex) {
         SelectedLine sl = new SelectedLine(msg, lineIndex);

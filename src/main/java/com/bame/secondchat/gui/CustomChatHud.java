@@ -5,6 +5,8 @@ import com.bame.secondchat.data.ChatTab;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.RenderTickCounter;
+import net.minecraft.util.math.MathHelper;
+import com.bame.secondchat.data.TabManager;
 
 import java.util.List;
 
@@ -74,6 +76,12 @@ public class CustomChatHud {
         }
 
         List<ChatMessage> messages = tab.getMessages();
+        if (tab.isSearchActive()) {
+            String query = tab.getSearchQuery().toLowerCase();
+            if (!query.isEmpty()) {
+                messages = messages.stream().filter(m -> m.getMessage().getString().toLowerCase().contains(query)).collect(java.util.stream.Collectors.toList());
+            }
+        }
         if (messages.isEmpty()) return;
         
         int x = tab.getX();

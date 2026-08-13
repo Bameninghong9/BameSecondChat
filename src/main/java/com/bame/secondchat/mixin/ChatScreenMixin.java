@@ -24,6 +24,7 @@ public abstract class ChatScreenMixin extends net.minecraft.client.gui.screen.Sc
     
     private com.bame.secondchat.gui.FontDropdownWidget fontDropdownWidget;
     private com.bame.secondchat.gui.EmojiPickerWidget emojiPickerWidget;
+    private java.util.Map<ChatTab, net.minecraft.client.gui.widget.TextFieldWidget> searchFields = new java.util.HashMap<>();
     private boolean showEmojiPicker = false;
 
     @Override
@@ -73,6 +74,29 @@ public abstract class ChatScreenMixin extends net.minecraft.client.gui.screen.Sc
             context.drawGuiTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, smileyId, btnX + 1, btnY + 1, 12, 12);
         }
 
+        java.util.List<ChatTab> openTabs = new java.util.ArrayList<>();
+        if (TabManager.getInstance().getActiveCustomTab() != null) openTabs.add(TabManager.getInstance().getActiveCustomTab());
+        if (TabManager.getInstance().isAllTabOpen()) openTabs.add(TabManager.getInstance().getAllTab());
+
+        for (ChatTab activeT : openTabs) {
+            if (activeT.isSearchActive()) {
+                net.minecraft.client.gui.widget.TextFieldWidget field = this.searchFields.get(activeT);
+                if (field == null) {
+                    field = new net.minecraft.client.gui.widget.TextFieldWidget(client.textRenderer, 20, screenHeight - 60, 150, 12, net.minecraft.text.Text.literal("Search Tab..."));
+                    field.setMaxLength(100);
+                    this.searchFields.put(activeT, field);
+                }
+                // Position search field dynamically below the active tab
+                field.setX(activeT.getX());
+                field.setY(activeT.getY() + 16);
+                if (!field.getText().equals(activeT.getSearchQuery())) {
+                    field.setText(activeT.getSearchQuery());
+                }
+                field.render(context, mouseX, mouseY, delta);
+                activeT.setSearchQuery(field.getText());
+            }
+        }
+
         if (this.showEmojiPicker) {
             if (this.emojiPickerWidget == null) {
                 this.emojiPickerWidget = new com.bame.secondchat.gui.EmojiPickerWidget(screenWidth, screenHeight);
@@ -83,6 +107,23 @@ public abstract class ChatScreenMixin extends net.minecraft.client.gui.screen.Sc
 
     @Inject(method = "keyPressed", at = @At("HEAD"), cancellable = true)
     private void onKeyPressed(net.minecraft.client.input.KeyInput keyInput, CallbackInfoReturnable<Boolean> cir) {
+        java.util.List<ChatTab> openTabs = new java.util.ArrayList<>();
+        if (TabManager.getInstance().getActiveCustomTab() != null) openTabs.add(TabManager.getInstance().getActiveCustomTab());
+        if (TabManager.getInstance().isAllTabOpen()) openTabs.add(TabManager.getInstance().getAllTab());
+        
+        for (ChatTab activeT : openTabs) {
+            if (activeT.isSearchActive()) {
+                net.minecraft.client.gui.widget.TextFieldWidget field = this.searchFields.get(activeT);
+                if (field != null) {
+                    if (field.keyPressed(keyInput)) {
+                        activeT.setSearchQuery(field.getText());
+                        cir.setReturnValue(true);
+                        return;
+                    }
+                }
+            }
+        }
+        
         if (this.showEmojiPicker && this.emojiPickerWidget != null) {
             if (this.emojiPickerWidget.keyPressed(keyInput)) {
                 cir.setReturnValue(true);
@@ -92,6 +133,22 @@ public abstract class ChatScreenMixin extends net.minecraft.client.gui.screen.Sc
 
     @Override
     public boolean charTyped(net.minecraft.client.input.CharInput charInput) {
+        java.util.List<ChatTab> openTabs = new java.util.ArrayList<>();
+        if (TabManager.getInstance().getActiveCustomTab() != null) openTabs.add(TabManager.getInstance().getActiveCustomTab());
+        if (TabManager.getInstance().isAllTabOpen()) openTabs.add(TabManager.getInstance().getAllTab());
+        
+        for (ChatTab activeT : openTabs) {
+            if (activeT.isSearchActive()) {
+                net.minecraft.client.gui.widget.TextFieldWidget field = this.searchFields.get(activeT);
+                if (field != null) {
+                    if (field.charTyped(charInput)) {
+                        activeT.setSearchQuery(field.getText());
+                        return true;
+                    }
+                }
+            }
+        }
+        
         if (this.showEmojiPicker && this.emojiPickerWidget != null) {
             if (this.emojiPickerWidget.charTyped(charInput)) {
                 return true;
@@ -119,6 +176,25 @@ public abstract class ChatScreenMixin extends net.minecraft.client.gui.screen.Sc
             }
         }
 
+        java.util.List<ChatTab> openTabsSearch = new java.util.ArrayList<>();
+        if (TabManager.getInstance().getActiveCustomTab() != null) openTabsSearch.add(TabManager.getInstance().getActiveCustomTab());
+        if (TabManager.getInstance().isAllTabOpen()) openTabsSearch.add(TabManager.getInstance().getAllTab());
+        
+        for (ChatTab activeT : openTabsSearch) {
+            if (activeT.isSearchActive()) {
+                net.minecraft.client.gui.widget.TextFieldWidget field = this.searchFields.get(activeT);
+                if (field != null) {
+                    if (field.mouseClicked(click, bl)) {
+                        field.setFocused(true);
+                        cir.setReturnValue(true);
+                        return;
+                    } else {
+                        field.setFocused(false);
+                    }
+                }
+            }
+        }
+
         if (this.showEmojiPicker && this.emojiPickerWidget != null) {
             if (this.emojiPickerWidget.mouseClicked(click, bl)) {
                 cir.setReturnValue(true);
@@ -141,14 +217,46 @@ public abstract class ChatScreenMixin extends net.minecraft.client.gui.screen.Sc
         int hudX = TabManager.getInstance().getHudX();
         int hudY = TabManager.getInstance().getHudY();
         
-        // 1. Check if clicked on a tab header
+        // 1. Check if clicked on a tab header or its search icon
         for (ChatTab tab : tabs) {
-            int width = client.textRenderer.getWidth(tab.getName()) + 12;
+            boolean isActive = (tab == TabManager.getInstance().getAllTab()) ? 
+                                TabManager.getInstance().isAllTabOpen() : 
+                                (tab == TabManager.getInstance().getActiveCustomTab());
+                                
+            int nameWidth = client.textRenderer.getWidth(tab.getName()) + 12;
+            if (tab.getUnreadCount() > 0) {
+                nameWidth += client.textRenderer.getWidth(String.valueOf(tab.getUnreadCount())) + 6;
+            }
+            int searchIconWidth = isActive ? client.textRenderer.getWidth("🔍") + 8 : 0;
+            int totalTabWidth = nameWidth + searchIconWidth;
+            
             int height = 14;
             int tabX = tab.getX();
             int tabY = tab.getY();
             
-            if (mouseX >= tabX && mouseX <= tabX + width && mouseY >= tabY && mouseY <= tabY + height) {
+            // Check if clicked exactly on the search icon
+            int searchX = tabX + nameWidth;
+            if (isActive && mouseX >= searchX && mouseX <= searchX + searchIconWidth && mouseY >= tabY && mouseY <= tabY + height) {
+                if (button == 0) { // Left click
+                    boolean active = !tab.isSearchActive();
+                    tab.setSearchActive(active);
+                    if (!active) {
+                        tab.setSearchQuery("");
+                    } else {
+                        net.minecraft.client.gui.widget.TextFieldWidget field = this.searchFields.get(tab);
+                        if (field == null) {
+                            field = new net.minecraft.client.gui.widget.TextFieldWidget(client.textRenderer, 20, client.getWindow().getScaledHeight() - 60, 150, 12, net.minecraft.text.Text.literal("Search Tab..."));
+                            field.setMaxLength(100);
+                            this.searchFields.put(tab, field);
+                        }
+                        field.setFocused(true);
+                    }
+                    cir.setReturnValue(true);
+                    return;
+                }
+            }
+            // Check if clicked on the rest of the tab header
+            else if (mouseX >= tabX && mouseX <= tabX + nameWidth && mouseY >= tabY && mouseY <= tabY + height) {
                 if (button == 0) { // Left click
                     TabManager.getInstance().setActiveTab(tab);
                     
@@ -314,10 +422,13 @@ public abstract class ChatScreenMixin extends net.minecraft.client.gui.screen.Sc
         }
         
         // 2. Check if clicked on the "+" button (anchored to "All" tab)
+        // allTab is already declared above
         int allWidth = client.textRenderer.getWidth("All") + 12;
         if (allTab.getUnreadCount() > 0) {
             allWidth += client.textRenderer.getWidth(String.valueOf(allTab.getUnreadCount())) + 6;
         }
+        allWidth += client.textRenderer.getWidth("🔍") + 8; // Search icon width
+        
         int plusX = allTab.getX() + allWidth + 2;
         int plusY = allTab.getY();
         int plusWidth = client.textRenderer.getWidth("+") + 12;
