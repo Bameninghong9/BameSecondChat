@@ -25,6 +25,7 @@ public class ColorPickerWidget {
     
     private boolean draggingSV = false;
     private boolean draggingHue = false;
+    private boolean internalChange = false;
 
     public ColorPickerWidget(int x, int y, Consumer<String> onColorChanged) {
         this.x = x;
@@ -33,6 +34,7 @@ public class ColorPickerWidget {
         this.hexField = new TextFieldWidget(MinecraftClient.getInstance().textRenderer, x + 10, y + 105, 100, 16, Text.literal("Hex"));
         this.hexField.setMaxLength(9);
         this.hexField.setChangedListener(text -> {
+            if (internalChange) return;
             if (!text.startsWith("#")) {
                 text = "#" + text;
             }
@@ -77,10 +79,13 @@ public class ColorPickerWidget {
     private void updateHexField() {
         int rgb = Color.HSBtoRGB(hue, saturation, brightness);
         String hex = String.format("#%06X", rgb & 0xFFFFFF);
+        
+        internalChange = true;
         if (!hexField.isFocused()) {
             hexField.setText(hex);
         }
         onColorChanged.accept(hex);
+        internalChange = false;
     }
 
     public void setVisible(boolean visible) {

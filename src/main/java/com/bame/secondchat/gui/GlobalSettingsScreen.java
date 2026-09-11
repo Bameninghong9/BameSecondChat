@@ -330,18 +330,31 @@ public class GlobalSettingsScreen extends Screen {
         
         int currentY = startY;
         
+        if (search.isEmpty()) {
+            context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("--- Chat Behavior ---").withColor(0xFFFFFF55), this.width / 2, currentY, 0xFFFFFF55);
+            currentY += 20;
+        }
         if (showMaxMsg) {
             context.drawTextWithShadow(this.textRenderer, Text.literal("Max Messages (0 = unendlich)"), xOffset, currentY - 10, 0xFFAAAAAA);
             this.maxMessagesField.setY(currentY);
-            currentY += 40;
+            currentY += 35;
+        }
+        if (showStackMsg) {
+            context.drawTextWithShadow(this.textRenderer, Text.literal("Stack Messages (0 = aus)"), xOffset, currentY - 10, 0xFFAAAAAA);
+            this.stackMessagesField.setY(currentY);
+            currentY += 35;
         }
         
+        if (search.isEmpty()) {
+            currentY += 5;
+            context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("--- Appearance ---").withColor(0xFF55FF55), this.width / 2, currentY, 0xFF55FF55);
+            currentY += 20;
+        }
         if (showTsFormat) {
             context.drawTextWithShadow(this.textRenderer, Text.literal("Timestamp Format"), xOffset, currentY - 10, 0xFFAAAAAA);
             this.timestampFormatField.setY(currentY);
-            currentY += 40;
+            currentY += 35;
         }
-        
         if (showTsColor) {
             context.drawTextWithShadow(this.textRenderer, Text.literal("Timestamp Color"), xOffset, currentY - 10, 0xFFAAAAAA);
             this.timestampColorField.setY(currentY);
@@ -350,10 +363,8 @@ public class GlobalSettingsScreen extends Screen {
             int color = parseColorForPreview(this.timestampColorField.getText());
             context.fill(xOffset - 26, currentY - 1, xOffset - 4, currentY + 21, 0xFFFFFFFF);
             context.fill(xOffset - 25, currentY, xOffset - 5, currentY + 20, color);
-            
-            currentY += 40;
+            currentY += 35;
         }
-        
         if (showSelColor) {
             context.drawTextWithShadow(this.textRenderer, Text.literal("Selection Color (Hex)"), xOffset, currentY - 10, 0xFFAAAAAA);
             this.selectionColorField.setY(currentY);
@@ -362,38 +373,33 @@ public class GlobalSettingsScreen extends Screen {
             int color = parseColorForPreview(this.selectionColorField.getText());
             context.fill(xOffset - 26, currentY - 1, xOffset - 4, currentY + 21, 0xFFFFFFFF);
             context.fill(xOffset - 25, currentY, xOffset - 5, currentY + 20, color);
-            
-            currentY += 40;
+            currentY += 35;
         }
-        
-        if (showStackMsg) {
-            context.drawTextWithShadow(this.textRenderer, Text.literal("Stack Messages (0 = aus)"), xOffset, currentY - 10, 0xFFAAAAAA);
-            this.stackMessagesField.setY(currentY);
-            currentY += 40;
-        }
-        
-        if (showFontDropdownSetting) {
-            context.drawTextWithShadow(this.textRenderer, Text.literal("Show Font Dropdown"), xOffset, currentY - 10, 0xFFAAAAAA);
-            this.showFontDropdownButton.setY(currentY);
-            currentY += 40;
-        }
-        
-        if (showEmojiBtnSetting) {
-            context.drawTextWithShadow(this.textRenderer, Text.literal("Show Emoji Button"), xOffset, currentY - 10, 0xFFAAAAAA);
-            this.showEmojiButtonButton.setY(currentY);
-            currentY += 40;
-        }
-        
-        if (showHeadsBtnSetting) {
-            context.drawTextWithShadow(this.textRenderer, Text.literal("Show Player Heads"), xOffset, currentY - 10, 0xFFAAAAAA);
-            this.showPlayerHeadsButton.setY(currentY);
-            currentY += 40;
-        }
-        
         if (showOpacitySetting) {
             context.drawTextWithShadow(this.textRenderer, Text.literal("Text Background Opacity"), xOffset, currentY - 10, 0xFFAAAAAA);
             this.opacitySlider.setY(currentY);
-            currentY += 40;
+            currentY += 35;
+        }
+        
+        if (search.isEmpty()) {
+            currentY += 5;
+            context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("--- Features ---").withColor(0xFF55FFFF), this.width / 2, currentY, 0xFF55FFFF);
+            currentY += 20;
+        }
+        if (showFontDropdownSetting) {
+            context.drawTextWithShadow(this.textRenderer, Text.literal("Show Font Dropdown"), xOffset, currentY - 10, 0xFFAAAAAA);
+            this.showFontDropdownButton.setY(currentY);
+            currentY += 35;
+        }
+        if (showEmojiBtnSetting) {
+            context.drawTextWithShadow(this.textRenderer, Text.literal("Show Emoji Button"), xOffset, currentY - 10, 0xFFAAAAAA);
+            this.showEmojiButtonButton.setY(currentY);
+            currentY += 35;
+        }
+        if (showHeadsBtnSetting) {
+            context.drawTextWithShadow(this.textRenderer, Text.literal("Show Player Heads"), xOffset, currentY - 10, 0xFFAAAAAA);
+            this.showPlayerHeadsButton.setY(currentY);
+            currentY += 35;
         }
         
         if (colorPicker != null) colorPicker.render(context, mouseX, mouseY, delta);

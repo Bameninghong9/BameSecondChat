@@ -130,9 +130,9 @@ public class CustomChatHud {
         int linesDrawn = 0;
         int currentTick = client.inGameHud.getTicks();
         
-        boolean isLeftClickHeld = org.lwjgl.glfw.GLFW.glfwGetMouseButton(client.getWindow().getHandle(), org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_1) == org.lwjgl.glfw.GLFW.GLFW_PRESS;
+        boolean isRightClickHeld = org.lwjgl.glfw.GLFW.glfwGetMouseButton(client.getWindow().getHandle(), org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_2) == org.lwjgl.glfw.GLFW.GLFW_PRESS;
         if (DragState.isDraggingTab || DragState.isResizing || DragState.isDraggingScrollbar) {
-            isLeftClickHeld = false;
+            isRightClickHeld = false;
         }
         
         
@@ -183,7 +183,7 @@ public class CustomChatHud {
                 
                 if (isLineHovered) {
                     hoveredMessage = msg;
-                    if (isLeftClickHeld) {
+                    if (isRightClickHeld) {
                         tab.getSelectedLines().add(new com.bame.secondchat.data.SelectedLine(msg, l));
                     }
                     

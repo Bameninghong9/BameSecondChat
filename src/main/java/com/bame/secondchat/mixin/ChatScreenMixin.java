@@ -384,37 +384,8 @@ public abstract class ChatScreenMixin extends net.minecraft.client.gui.screen.Sc
                 }
                 
                 if (button == 1) { // Right click
-                    int lineHeight = 12;
-                    int maxLines = chatHeight / lineHeight;
-                    
-                    int relativeYFromBottom = (chatY + chatHeight) - (int)mouseY;
-                    int linesFromBottom = relativeYFromBottom / lineHeight;
-                    
-                    if (linesFromBottom >= 0 && linesFromBottom < maxLines) {
-                        int scrollLines = (int) activeTab.getScrollOffset();
-                        int targetVisibleLine = linesFromBottom; // 0 = bottom
-                        
-                        int currentVisibleLine = 0;
-                        
-                        
-                        int newestVisibleIndex = activeTab.getMessages().size() - 1 - scrollLines;
-                        if (newestVisibleIndex >= activeTab.getMessages().size()) newestVisibleIndex = activeTab.getMessages().size() - 1;
-                        if (newestVisibleIndex < 0) newestVisibleIndex = 0;
-                        for (int i = newestVisibleIndex; i >= 0; i--) {
-                            com.bame.secondchat.data.ChatMessage msg = activeTab.getMessages().get(i);
-                            java.util.List<net.minecraft.text.OrderedText> wrapped = client.textRenderer.wrapLines(msg.getRenderedMessage(), chatWidth - 8);
-                            
-                            for (int l = wrapped.size() - 1; l >= 0; l--) {
-                                
-                                if (currentVisibleLine == targetVisibleLine) {
-                                    activeTab.toggleSelection(msg, l);
-                                    cir.setReturnValue(true);
-                                    return;
-                                }
-                                currentVisibleLine++;
-                            }
-                        }
-                    }
+                    cir.setReturnValue(true);
+                    return;
                 }
             }
         }
