@@ -6,6 +6,9 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.text.Text;
+import net.minecraft.client.gui.Click;
+import net.minecraft.client.input.KeyInput;
+import net.minecraft.client.input.CharInput;
 
 public class GlobalSettingsScreen extends Screen {
 
@@ -26,6 +29,8 @@ public class GlobalSettingsScreen extends Screen {
     private net.minecraft.client.gui.widget.SliderWidget opacitySlider;
     
     private ButtonWidget saveButton;
+    private ColorPickerWidget colorPicker;
+    private String activePickerField = null;
 
     public GlobalSettingsScreen(Screen parent) {
         super(Text.literal("Global Settings - SecondChat"));
@@ -132,8 +137,93 @@ public class GlobalSettingsScreen extends Screen {
         }).dimensions(this.width / 2 - 100, this.height - 30, 200, 20).build();
         
         this.addDrawableChild(this.saveButton);
+        
+        this.colorPicker = new ColorPickerWidget(0, 0, hex -> {
+            if ("selection".equals(activePickerField)) {
+                this.selectionColorField.setText(hex);
+            } else if ("timestamp".equals(activePickerField)) {
+                this.timestampColorField.setText(hex);
+            }
+        });
     }
     
+    
+    @Override
+    public boolean mouseClicked(Click click, boolean inside) {
+        double mouseX = click.x();
+        double mouseY = click.y();
+        if (colorPicker != null && colorPicker.isVisible()) {
+            if (colorPicker.mouseClicked(click, inside)) {
+                return true;
+            } else {
+                colorPicker.setVisible(false); // Close if clicked outside
+            }
+        }
+        
+        int fieldWidth = 200;
+        int xOffset = this.width / 2 - fieldWidth / 2;
+        
+        if (this.timestampColorField.visible) {
+            int y = this.timestampColorField.getY();
+            if (mouseX >= xOffset - 26 && mouseX <= xOffset - 4 && mouseY >= y - 1 && mouseY <= y + 21) {
+                activePickerField = "timestamp";
+                colorPicker.setPosition(xOffset - 150, y);
+                colorPicker.setColor(this.timestampColorField.getText());
+                colorPicker.setVisible(true);
+                return true;
+            }
+        }
+        
+        if (this.selectionColorField.visible) {
+            int y = this.selectionColorField.getY();
+            if (mouseX >= xOffset - 26 && mouseX <= xOffset - 4 && mouseY >= y - 1 && mouseY <= y + 21) {
+                activePickerField = "selection";
+                colorPicker.setPosition(xOffset - 150, y);
+                colorPicker.setColor(this.selectionColorField.getText());
+                colorPicker.setVisible(true);
+                return true;
+            }
+        }
+        
+        return super.mouseClicked(click, inside);
+    }
+    
+    @Override
+    public boolean mouseReleased(Click click) {
+        double mouseX = click.x();
+        double mouseY = click.y();
+        if (colorPicker != null && colorPicker.isVisible()) {
+            if (colorPicker.mouseReleased(click)) return true;
+        }
+        return super.mouseReleased(click);
+    }
+    
+    @Override
+    public boolean mouseDragged(Click click, double deltaX, double deltaY) {
+        double mouseX = click.x();
+        double mouseY = click.y();
+        if (colorPicker != null && colorPicker.isVisible()) {
+            if (colorPicker.mouseDragged(click, deltaX, deltaY)) return true;
+        }
+        return super.mouseDragged(click, deltaX, deltaY);
+    }
+    
+    @Override
+    public boolean charTyped(CharInput charInput) {
+        if (colorPicker != null && colorPicker.isVisible()) {
+            if (colorPicker.charTyped(charInput)) return true;
+        }
+        return super.charTyped(charInput);
+    }
+    
+    @Override
+    public boolean keyPressed(KeyInput keyInput) {
+        if (colorPicker != null && colorPicker.isVisible()) {
+            if (colorPicker.keyPressed(keyInput)) return true;
+        }
+        return super.keyPressed(keyInput);
+    }
+
     private void saveSettings() {
         GlobalConfig config = GlobalConfig.getInstance();
         try {
@@ -306,8 +396,9 @@ public class GlobalSettingsScreen extends Screen {
             currentY += 40;
         }
         
+        if (colorPicker != null) colorPicker.render(context, mouseX, mouseY, delta);
     }
-    
+
     @Override
     public void close() {
         this.client.setScreen(this.parent);
