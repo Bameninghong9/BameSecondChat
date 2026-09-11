@@ -110,14 +110,12 @@ public class ColorPickerWidget {
         int svY = y + 20;
         int svSize = 70;
         
-        // Draw SV gradient
+        // Draw SV gradient using vertical columns to improve performance (70 calls vs 4900)
         for (int i = 0; i < svSize; i++) {
-            for (int j = 0; j < svSize; j++) {
-                float s = (float) i / svSize;
-                float b = 1.0f - ((float) j / svSize);
-                int color = Color.HSBtoRGB(hue, s, b);
-                context.fill(svX + i, svY + j, svX + i + 1, svY + j + 1, color | 0xFF000000);
-            }
+            float s = (float) i / svSize;
+            int topColor = Color.HSBtoRGB(hue, s, 1.0f) | 0xFF000000;
+            int bottomColor = 0xFF000000; // Black (B=0)
+            context.fillGradient(svX + i, svY, svX + i + 1, svY + svSize, topColor, bottomColor);
         }
         
         // Draw SV cursor
