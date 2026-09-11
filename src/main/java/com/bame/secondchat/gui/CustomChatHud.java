@@ -130,7 +130,6 @@ public class CustomChatHud {
         int linesDrawn = 0;
         int currentTick = client.inGameHud.getTicks();
         
-        boolean isRightClickHeld = org.lwjgl.glfw.GLFW.glfwGetMouseButton(client.getWindow().getHandle(), org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_2) == org.lwjgl.glfw.GLFW.GLFW_PRESS;
         
         int selectionColor = com.bame.secondchat.config.GlobalConfig.getInstance().parseSelectionColor();
         
@@ -179,9 +178,6 @@ public class CustomChatHud {
                 
                 if (isLineHovered) {
                     hoveredMessage = msg;
-                    if (isRightClickHeld) {
-                        tab.getSelectedLines().add(new com.bame.secondchat.data.SelectedLine(msg, l));
-                    }
                     
                     int targetX = (int)(mouseX - (x + 2));
                     int[] currentX = {0};

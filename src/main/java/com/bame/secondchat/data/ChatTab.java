@@ -133,6 +133,9 @@ public class ChatTab {
         }
         
         this.messages.add(message);
+        if (this.scrollOffset > 0) {
+            this.scrollOffset++;
+        }
         
         int max = com.bame.secondchat.config.GlobalConfig.getInstance().maxMessages;
         if (max > 0) {

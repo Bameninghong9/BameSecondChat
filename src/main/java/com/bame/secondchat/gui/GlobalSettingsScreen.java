@@ -36,12 +36,12 @@ public class GlobalSettingsScreen extends Screen {
     protected void init() {
         super.init();
         
-        int startY = 50;
+        int startY = 75;
         int fieldWidth = 200;
         int fieldHeight = 20;
         int xOffset = this.width / 2 - fieldWidth / 2;
         
-        this.searchField = new TextFieldWidget(this.textRenderer, this.width / 2 - 100, 15, 200, 20, Text.literal("Search"));
+        this.searchField = new TextFieldWidget(this.textRenderer, this.width / 2 - 100, 40, 200, 20, Text.literal("Search"));
         this.searchField.setPlaceholder(Text.literal("Search settings..."));
         this.addDrawableChild(this.searchField);
         
@@ -180,13 +180,31 @@ public class GlobalSettingsScreen extends Screen {
     }
 
     @Override
+    public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
+        this.renderDarkening(context);
+        
+        int panelWidth = 300;
+        int panelHeight = this.height - 40;
+        int left = this.width / 2 - panelWidth / 2;
+        int top = 20;
+        int right = this.width / 2 + panelWidth / 2;
+        int bottom = this.height - 20;
+        
+        context.fill(left, top, right, bottom, 0xDD000000);
+        context.fill(left - 1, top - 1, right + 1, top, 0x55FFFFFF);
+        context.fill(left - 1, bottom, right + 1, bottom + 1, 0x55FFFFFF);
+        context.fill(left - 1, top, left, bottom, 0x55FFFFFF);
+        context.fill(right, top, right + 1, bottom, 0x55FFFFFF);
+    }
+    
+    @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
         
         // Draw title
-        context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, 5, 0xFFFFFFFF);
+        context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, 25, 0xFFFFAA00);
         
-        int startY = 50;
+        int startY = 75;
         int fieldWidth = 200;
         int xOffset = this.width / 2 - fieldWidth / 2;
         

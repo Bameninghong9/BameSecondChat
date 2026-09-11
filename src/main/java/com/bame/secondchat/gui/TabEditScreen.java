@@ -24,6 +24,9 @@ public class TabEditScreen extends Screen {
     private boolean hideFromVanilla;
     private int ruleTypeIndex = 0; // 0=Contains, 1=StartsWith, 2=CapturesBlock
     private ButtonWidget ruleTypeButton;
+    
+    private int panelWidth = 240;
+    private int panelHeight = 270;
 
     public TabEditScreen(Screen parent, ChatTab tab, boolean isNew) {
         super(Text.literal(isNew ? "Create new Chat Tab" : "Edit Chat Tab"));
@@ -32,7 +35,6 @@ public class TabEditScreen extends Screen {
         this.isNew = isNew;
         this.hideFromVanilla = tab.isHideFromAll();
         
-        // Determine rule type from existing rules
         this.ruleTypeIndex = 0;
         for (FilterRule rule : tab.getRules()) {
             if (rule instanceof com.bame.secondchat.data.CapturesBlockRule) {
@@ -48,7 +50,9 @@ public class TabEditScreen extends Screen {
     @Override
     protected void init() {
         int centerX = this.width / 2;
-        int startY = 50;
+        int centerY = this.height / 2;
+        
+        int startY = centerY - panelHeight / 2 + 35;
 
         // Name Field
         this.nameField = new TextFieldWidget(this.textRenderer, centerX - 100, startY, 200, 20, Text.literal("Tab Name"));
@@ -56,7 +60,7 @@ public class TabEditScreen extends Screen {
         this.nameField.setText(this.tab.getName());
         this.addDrawableChild(this.nameField);
 
-        startY += 30;
+        startY += 35;
 
         // Hide From Vanilla Button
         this.hideFromVanillaButton = ButtonWidget.builder(getHideFromVanillaText(), button -> {
@@ -65,7 +69,7 @@ public class TabEditScreen extends Screen {
         }).dimensions(centerX - 100, startY, 200, 20).build();
         this.addDrawableChild(this.hideFromVanillaButton);
 
-        startY += 35;
+        startY += 40;
         
         // Rule Type Toggle Button
         this.ruleTypeButton = ButtonWidget.builder(getRuleTypeText(), button -> {
@@ -88,66 +92,68 @@ public class TabEditScreen extends Screen {
         this.rulesField.setText(rulesText.toString());
         this.addDrawableChild(this.rulesField);
 
-        startY += 40;
+        startY += 35;
 
-        // Delete Button (only if not new)
+        // Delete Button & Clear Chat Button side-by-side
         if (!isNew && !tab.getName().equals("All")) {
-            ButtonWidget deleteButton = ButtonWidget.builder(Text.literal("Delete Tab").withColor(0xFF5555), button -> {
+            ButtonWidget deleteButton = ButtonWidget.builder(Text.literal("Delete Tab").withColor(0xFFFF5555), button -> {
                 TabManager.getInstance().removeTab(this.tab);
                 com.bame.secondchat.config.ModConfig.save();
                 if (this.client != null) {
                     this.client.setScreen(this.parent);
                 }
-            }).dimensions(centerX - 100, startY, 200, 20).build();
+            }).dimensions(centerX - 100, startY, 95, 20).build();
             this.addDrawableChild(deleteButton);
-            startY += 30;
         }
         
-        // Clear Chat Button (only if not new)
         if (!isNew) {
             ButtonWidget clearChatButton = ButtonWidget.builder(Text.literal("Clear Chat").withColor(0xFFFFAA00), button -> {
                 this.tab.clearMessages();
                 if (this.client != null) {
                     this.client.setScreen(this.parent);
                 }
-            }).dimensions(centerX - 100, startY, 200, 20).build();
+            }).dimensions(centerX + 5, startY, 95, 20).build();
             this.addDrawableChild(clearChatButton);
-            startY += 30;
         }
-
+        
         // Save & Cancel Buttons
-        ButtonWidget saveButton = ButtonWidget.builder(Text.literal("Save"), button -> {
+        int bottomY = centerY + panelHeight / 2 - 30;
+        ButtonWidget saveButton = ButtonWidget.builder(Text.literal("Save").withColor(0xFF55FF55), button -> {
             saveTab();
             if (this.client != null) {
                 this.client.setScreen(this.parent);
             }
-        }).dimensions(centerX - 100, startY, 95, 20).build();
+        }).dimensions(centerX - 100, bottomY, 95, 20).build();
         this.addDrawableChild(saveButton);
 
-        ButtonWidget cancelButton = ButtonWidget.builder(Text.literal("Cancel"), button -> {
+        ButtonWidget cancelButton = ButtonWidget.builder(Text.literal("Cancel").withColor(0xFFBBBBBB), button -> {
             if (this.client != null) {
                 this.client.setScreen(this.parent);
             }
-        }).dimensions(centerX + 5, startY, 95, 20).build();
+        }).dimensions(centerX + 5, bottomY, 95, 20).build();
         this.addDrawableChild(cancelButton);
     }
 
     private Text getHideFromVanillaText() {
-        return Text.literal("Hide from Vanilla: " + (this.hideFromVanilla ? "ON" : "OFF"));
+        if (this.hideFromVanilla) {
+            return Text.literal("Hide from Vanilla: ").append(Text.literal("ON").withColor(0xFF55FF55));
+        } else {
+            return Text.literal("Hide from Vanilla: ").append(Text.literal("OFF").withColor(0xFFFF5555));
+        }
     }
     
     private Text getRuleTypeText() {
         String typeStr = "Contains";
-        if (this.ruleTypeIndex == 1) typeStr = "Starts With";
-        else if (this.ruleTypeIndex == 2) typeStr = "Captures Block";
-        return Text.literal("Rule Type: " + typeStr);
+        int color = 0xFF55FFFF;
+        if (this.ruleTypeIndex == 1) { typeStr = "Starts With"; color = 0xFFFFFF55; }
+        else if (this.ruleTypeIndex == 2) { typeStr = "Captures Block"; color = 0xFFFF55FF; }
+        return Text.literal("Rule Type: ").append(Text.literal(typeStr).withColor(color));
     }
 
     private void saveTab() {
         String newName = this.nameField.getText().trim();
         if (newName.isEmpty()) newName = "Unnamed";
 
-        // Parse rules
         String[] rulesRaw = this.rulesField.getText().split(",");
         List<FilterRule> newRules = new ArrayList<>();
         for (String rRaw : rulesRaw) {
@@ -168,7 +174,6 @@ public class TabEditScreen extends Screen {
             newTab.getRules().addAll(newRules);
             TabManager.getInstance().addTab(newTab);
         } else {
-            // Updating existing
             if (this.tab != TabManager.getInstance().getAllTab()) {
                 TabManager.getInstance().updateTab(this.tab, newName, this.hideFromVanilla, newRules);
             }
@@ -182,13 +187,18 @@ public class TabEditScreen extends Screen {
         super.render(context, mouseX, mouseY, delta);
         
         int centerX = this.width / 2;
-        context.drawCenteredTextWithShadow(this.textRenderer, this.title, centerX, 15, 0xFFFFFFFF);
+        int centerY = this.height / 2;
         
-        context.drawTextWithShadow(this.textRenderer, Text.literal("Tab Name:"), centerX - 100, 38, 0xFFA0A0A0);
+        context.drawCenteredTextWithShadow(this.textRenderer, this.title, centerX, centerY - panelHeight / 2 + 10, 0xFFFFAA00);
         
-        // Find Y of rules field
-        int rulesY = this.rulesField.getY() - 12;
-        context.drawTextWithShadow(this.textRenderer, Text.literal("Rules (comma separated):"), centerX - 100, rulesY, 0xFFA0A0A0);
+        context.drawTextWithShadow(this.textRenderer, Text.literal("Tab Name:"), centerX - 100, this.nameField.getY() - 11, 0xFFDDDDDD);
+        
+        int rulesY = this.rulesField.getY() - 11;
+        context.drawTextWithShadow(this.textRenderer, Text.literal("Rules (comma separated):"), centerX - 100, rulesY, 0xFFDDDDDD);
+        
+        // Horizontal divider above save/cancel
+        int bottomY = centerY + panelHeight / 2 - 40;
+        context.fill(centerX - 110, bottomY, centerX + 110, bottomY + 1, 0x55FFFFFF);
     }
 
     @Override
@@ -196,31 +206,18 @@ public class TabEditScreen extends Screen {
         this.renderDarkening(context);
         
         int centerX = this.width / 2;
-        int topY = 10;
+        int centerY = this.height / 2;
         
-        // Measure where the lowest button is
-        int bottomY = this.height - 10;
-        if (this.children().size() > 0) {
-            // Find lowest widget
-            int maxBottom = topY;
-            for (net.minecraft.client.gui.Element e : this.children()) {
-                if (e instanceof net.minecraft.client.gui.widget.ClickableWidget cw) {
-                    if (cw.getY() + cw.getHeight() > maxBottom) {
-                        maxBottom = cw.getY() + cw.getHeight();
-                    }
-                }
-            }
-            bottomY = maxBottom + 20;
-        }
+        int left = centerX - panelWidth / 2;
+        int top = centerY - panelHeight / 2;
+        int right = centerX + panelWidth / 2;
+        int bottom = centerY + panelHeight / 2;
         
-        // Draw window background
-        context.fill(centerX - 120, topY, centerX + 120, bottomY, 0xCC000000);
-        
-        // Draw border
-        int borderColor = 0xFF555555;
-        context.fill(centerX - 120, topY, centerX + 120, topY + 1, borderColor); // Top
-        context.fill(centerX - 120, bottomY - 1, centerX + 120, bottomY, borderColor); // Bottom
-        context.fill(centerX - 120, topY, centerX - 119, bottomY, borderColor); // Left
-        context.fill(centerX + 119, topY, centerX + 120, bottomY, borderColor); // Right
+        // Draw a nice translucent black panel with a subtle border
+        context.fill(left, top, right, bottom, 0xDD000000);
+        context.fill(left - 1, top - 1, right + 1, top, 0x55FFFFFF); // Top border
+        context.fill(left - 1, bottom, right + 1, bottom + 1, 0x55FFFFFF); // Bottom border
+        context.fill(left - 1, top, left, bottom, 0x55FFFFFF); // Left border
+        context.fill(right, top, right + 1, bottom, 0x55FFFFFF); // Right border
     }
 }

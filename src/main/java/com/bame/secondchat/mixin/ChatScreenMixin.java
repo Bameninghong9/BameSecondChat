@@ -336,17 +336,16 @@ public abstract class ChatScreenMixin extends net.minecraft.client.gui.screen.Sc
                         int targetVisibleLine = linesFromBottom; // 0 = bottom
                         
                         int currentVisibleLine = 0;
-                        int skippedLines = 0;
                         
-                        for (int i = activeTab.getMessages().size() - 1; i >= 0; i--) {
+                        
+                        int newestVisibleIndex = activeTab.getMessages().size() - 1 - scrollLines;
+                        if (newestVisibleIndex >= activeTab.getMessages().size()) newestVisibleIndex = activeTab.getMessages().size() - 1;
+                        if (newestVisibleIndex < 0) newestVisibleIndex = 0;
+                        for (int i = newestVisibleIndex; i >= 0; i--) {
                             com.bame.secondchat.data.ChatMessage msg = activeTab.getMessages().get(i);
                             java.util.List<net.minecraft.text.OrderedText> wrapped = client.textRenderer.wrapLines(msg.getRenderedMessage(), chatWidth - 8);
                             
                             for (int l = wrapped.size() - 1; l >= 0; l--) {
-                                if (skippedLines < scrollLines) {
-                                    skippedLines++;
-                                    continue;
-                                }
                                 
                                 if (currentVisibleLine == targetVisibleLine) {
                                     final int targetX = (int)(mouseX - (chatX + 2));
@@ -396,17 +395,16 @@ public abstract class ChatScreenMixin extends net.minecraft.client.gui.screen.Sc
                         int targetVisibleLine = linesFromBottom; // 0 = bottom
                         
                         int currentVisibleLine = 0;
-                        int skippedLines = 0;
                         
-                        for (int i = activeTab.getMessages().size() - 1; i >= 0; i--) {
+                        
+                        int newestVisibleIndex = activeTab.getMessages().size() - 1 - scrollLines;
+                        if (newestVisibleIndex >= activeTab.getMessages().size()) newestVisibleIndex = activeTab.getMessages().size() - 1;
+                        if (newestVisibleIndex < 0) newestVisibleIndex = 0;
+                        for (int i = newestVisibleIndex; i >= 0; i--) {
                             com.bame.secondchat.data.ChatMessage msg = activeTab.getMessages().get(i);
                             java.util.List<net.minecraft.text.OrderedText> wrapped = client.textRenderer.wrapLines(msg.getRenderedMessage(), chatWidth - 8);
                             
                             for (int l = wrapped.size() - 1; l >= 0; l--) {
-                                if (skippedLines < scrollLines) {
-                                    skippedLines++;
-                                    continue;
-                                }
                                 
                                 if (currentVisibleLine == targetVisibleLine) {
                                     activeTab.toggleSelection(msg, l);
