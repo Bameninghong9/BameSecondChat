@@ -175,7 +175,7 @@ public class GlobalSettingsScreen extends Screen {
     
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        super.render(context, mouseX, mouseY, delta);
+        this.renderBackground(context, mouseX, mouseY, delta);
         
         int panelWidth = 400;
         int panelHeight = 260;
@@ -184,13 +184,13 @@ public class GlobalSettingsScreen extends Screen {
         int sidebarW = 100;
         
         // Background and Border
-        context.fill(panelX - 1, panelY - 1, panelX + panelWidth + 1, panelY + panelHeight + 1, 0xFF333333);
-        context.fill(panelX, panelY, panelX + sidebarW, panelY + panelHeight, 0xFF111111); // Sidebar
-        context.fill(panelX + sidebarW, panelY, panelX + panelWidth, panelY + panelHeight, 0xFF1E1E1E); // Main content
+        context.fill(panelX - 1, panelY - 1, panelX + panelWidth + 1, panelY + panelHeight + 1, 0xCC333333);
+        context.fill(panelX, panelY, panelX + sidebarW, panelY + panelHeight, 0xCC111111); // Sidebar
+        context.fill(panelX + sidebarW, panelY, panelX + panelWidth, panelY + panelHeight, 0xCC1E1E1E); // Main content
         
         // Sidebar Title
         context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("Settings").withColor(0xFFFFAA00), panelX + sidebarW / 2, panelY + 15, 0xFFFFFFFF);
-        context.fill(panelX + 10, panelY + 30, panelX + sidebarW - 10, panelY + 31, 0xFF333333); // Divider
+        context.fill(panelX + 10, panelY + 30, panelX + sidebarW - 10, panelY + 31, 0xCC333333); // Divider
         
         // Sidebar Tabs
         String[] tabs = {"Behavior", "Appearance", "Features"};
@@ -200,10 +200,10 @@ public class GlobalSettingsScreen extends Screen {
             boolean active = (currentTab == i);
             
             if (active) {
-                context.fill(panelX, tabY, panelX + sidebarW, tabY + 35, 0xFF2A2A2A);
+                context.fill(panelX, tabY, panelX + sidebarW, tabY + 35, 0xCC2A2A2A);
                 context.fill(panelX, tabY, panelX + 3, tabY + 35, 0xFFFFAA00); // Orange indicator
             } else if (hovered) {
-                context.fill(panelX, tabY, panelX + sidebarW, tabY + 35, 0xFF222222);
+                context.fill(panelX, tabY, panelX + sidebarW, tabY + 35, 0xCC222222);
             }
             
             int color = active ? 0xFFFFFFFF : 0xFFAAAAAA;
@@ -240,6 +240,8 @@ public class GlobalSettingsScreen extends Screen {
             context.drawTextWithShadow(this.textRenderer, Text.literal("Show Emoji Button:"), contentX, panelY + 76, 0xFFFFFFFF);
             context.drawTextWithShadow(this.textRenderer, Text.literal("Show Player Heads:"), contentX, panelY + 116, 0xFFFFFFFF);
         }
+        
+        super.render(context, mouseX, mouseY, delta);
         
         if (colorPicker != null) colorPicker.render(context, mouseX, mouseY, delta);
     }
