@@ -383,9 +383,12 @@ public class GlobalSettingsScreen extends Screen {
         }
 
         public boolean mouseClicked(net.minecraft.client.gui.Click click, boolean inside) {
-            if (this.active && this.visible && inside && true) { // 1 = press usually
+            double mouseX = click.x();
+            double mouseY = click.y();
+            if (this.active && this.visible && mouseX >= this.getX() && mouseX <= this.getX() + this.width && mouseY >= this.getY() && mouseY <= this.getY() + this.height) {
                 this.state = !this.state;
                 this.onChange.accept(this.state);
+                this.playDownSound(net.minecraft.client.MinecraftClient.getInstance().getSoundManager());
                 return true;
             }
             return false;
