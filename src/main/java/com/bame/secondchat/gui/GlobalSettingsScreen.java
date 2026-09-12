@@ -175,7 +175,6 @@ public class GlobalSettingsScreen extends Screen {
     
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        this.renderBackground(context, mouseX, mouseY, delta);
         
         int panelWidth = 400;
         int panelHeight = 260;
