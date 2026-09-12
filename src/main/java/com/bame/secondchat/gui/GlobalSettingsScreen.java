@@ -26,9 +26,9 @@ public class GlobalSettingsScreen extends Screen {
     private ButtonWidget selectionColorResetButton;
     private net.minecraft.client.gui.widget.SliderWidget opacitySlider;
     
-    private ButtonWidget showFontDropdownButton;
-    private ButtonWidget showEmojiButtonButton;
-    private ButtonWidget showPlayerHeadsButton;
+    private net.minecraft.client.gui.widget.ClickableWidget showFontDropdownButton;
+    private net.minecraft.client.gui.widget.ClickableWidget showEmojiButtonButton;
+    private net.minecraft.client.gui.widget.ClickableWidget showPlayerHeadsButton;
     
     private ButtonWidget saveButton;
     private ColorPickerWidget colorPicker;
@@ -129,14 +129,8 @@ public class GlobalSettingsScreen extends Screen {
         updateVisibility();
     }
     
-    private ButtonWidget createToggleButton(int x, int y, int w, boolean initial, java.util.function.Consumer<Boolean> onChange) {
-        Text t = Text.literal(initial ? "ON" : "OFF").withColor(initial ? 0x55FF55 : 0xFF5555);
-        return ButtonWidget.builder(t, btn -> {
-            boolean current = btn.getMessage().getString().equals("ON");
-            boolean next = !current;
-            onChange.accept(next);
-            btn.setMessage(Text.literal(next ? "ON" : "OFF").withColor(next ? 0x55FF55 : 0xFF5555));
-        }).dimensions(x, y, w, 20).build();
+    private net.minecraft.client.gui.widget.ClickableWidget createToggleButton(int x, int y, int w, boolean initial, java.util.function.Consumer<Boolean> onChange) {
+        return new ToggleButtonWidget(x, y, w, 20, initial, onChange);
     }
     
     private void updateVisibility() {
@@ -183,13 +177,13 @@ public class GlobalSettingsScreen extends Screen {
         int sidebarW = 100;
         
         // Background and Border
-        context.fill(panelX - 1, panelY - 1, panelX + panelWidth + 1, panelY + panelHeight + 1, 0xCC333333);
-        context.fill(panelX, panelY, panelX + sidebarW, panelY + panelHeight, 0xCC111111); // Sidebar
-        context.fill(panelX + sidebarW, panelY, panelX + panelWidth, panelY + panelHeight, 0xCC1E1E1E); // Main content
+        context.fill(panelX - 1, panelY - 1, panelX + panelWidth + 1, panelY + panelHeight + 1, 0x88333333);
+        context.fill(panelX, panelY, panelX + sidebarW, panelY + panelHeight, 0x88000000); // Sidebar
+        context.fill(panelX + sidebarW, panelY, panelX + panelWidth, panelY + panelHeight, 0x88111111); // Main content
         
         // Sidebar Title
         context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("Settings").withColor(0xFFFFAA00), panelX + sidebarW / 2, panelY + 15, 0xFFFFFFFF);
-        context.fill(panelX + 10, panelY + 30, panelX + sidebarW - 10, panelY + 31, 0xCC333333); // Divider
+        context.fill(panelX + 10, panelY + 30, panelX + sidebarW - 10, panelY + 31, 0x88333333); // Divider
         
         // Sidebar Tabs
         String[] tabs = {"Behavior", "Appearance", "Features"};
@@ -199,10 +193,10 @@ public class GlobalSettingsScreen extends Screen {
             boolean active = (currentTab == i);
             
             if (active) {
-                context.fill(panelX, tabY, panelX + sidebarW, tabY + 35, 0xCC2A2A2A);
+                context.fill(panelX, tabY, panelX + sidebarW, tabY + 35, 0x882A2A2A);
                 context.fill(panelX, tabY, panelX + 3, tabY + 35, 0xFFFFAA00); // Orange indicator
             } else if (hovered) {
-                context.fill(panelX, tabY, panelX + sidebarW, tabY + 35, 0xCC222222);
+                context.fill(panelX, tabY, panelX + sidebarW, tabY + 35, 0x88222222);
             }
             
             int color = active ? 0xFFFFFFFF : 0xFFAAAAAA;
@@ -353,5 +347,51 @@ public class GlobalSettingsScreen extends Screen {
     @Override
     public void close() {
         this.client.setScreen(this.parent);
+    }
+
+    private static class ToggleButtonWidget extends net.minecraft.client.gui.widget.ClickableWidget {
+        private boolean state;
+        private final java.util.function.Consumer<Boolean> onChange;
+
+        public ToggleButtonWidget(int x, int y, int width, int height, boolean initialState, java.util.function.Consumer<Boolean> onChange) {
+            super(x, y, width, height, net.minecraft.text.Text.empty());
+            this.state = initialState;
+            this.onChange = onChange;
+        }
+
+        @Override
+        protected void renderWidget(net.minecraft.client.gui.DrawContext context, int mouseX, int mouseY, float delta) {
+            int bg = this.isHovered() ? 0xAA444444 : 0xAA222222;
+            
+            // Draw background
+            context.fill(this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, bg);
+            // Draw border
+            context.fill(this.getX() - 1, this.getY() - 1, this.getX() + this.width + 1, this.getY(), 0xFF555555);
+            context.fill(this.getX() - 1, this.getY() + this.height, this.getX() + this.width + 1, this.getY() + this.height + 1, 0xFF555555);
+            context.fill(this.getX() - 1, this.getY(), this.getX(), this.getY() + this.height, 0xFF555555);
+            context.fill(this.getX() + this.width, this.getY(), this.getX() + this.width + 1, this.getY() + this.height, 0xFF555555);
+            
+            // Draw indicator
+            int color = state ? 0xFF00DD00 : 0xFFDD0000;
+            int indWidth = this.width / 2;
+            int indX = state ? (this.getX() + this.width - indWidth) : this.getX();
+            context.fill(indX, this.getY(), indX + indWidth, this.getY() + this.height, color);
+            
+            // Draw text
+            net.minecraft.text.Text text = net.minecraft.text.Text.literal(state ? "ON" : "OFF").withColor(0xFFFFFFFF);
+            context.drawCenteredTextWithShadow(net.minecraft.client.MinecraftClient.getInstance().textRenderer, text, this.getX() + this.width / 2, this.getY() + (this.height - 8) / 2, 0xFFFFFFFF);
+        }
+
+        public boolean mouseClicked(net.minecraft.client.gui.Click click, boolean inside) {
+            if (this.active && this.visible && inside && true) { // 1 = press usually
+                this.state = !this.state;
+                this.onChange.accept(this.state);
+                return true;
+            }
+            return false;
+        }
+        
+        @Override
+        protected void appendClickableNarrations(net.minecraft.client.gui.screen.narration.NarrationMessageBuilder builder) {}
     }
 }
