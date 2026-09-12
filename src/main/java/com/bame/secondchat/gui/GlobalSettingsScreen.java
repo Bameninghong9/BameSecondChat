@@ -13,27 +13,29 @@ import net.minecraft.client.input.CharInput;
 public class GlobalSettingsScreen extends Screen {
 
     private final Screen parent;
-    private TextFieldWidget searchField;
+    
+    private int currentTab = 0; // 0 = Behavior, 1 = Appearance, 2 = Features
     
     private TextFieldWidget maxMessagesField;
+    private TextFieldWidget stackMessagesField;
+    
     private TextFieldWidget timestampFormatField;
     private TextFieldWidget timestampColorField;
     private TextFieldWidget selectionColorField;
-    
-    private TextFieldWidget stackMessagesField;
     private ButtonWidget timestampColorResetButton;
     private ButtonWidget selectionColorResetButton;
+    private net.minecraft.client.gui.widget.SliderWidget opacitySlider;
+    
     private ButtonWidget showFontDropdownButton;
     private ButtonWidget showEmojiButtonButton;
     private ButtonWidget showPlayerHeadsButton;
-    private net.minecraft.client.gui.widget.SliderWidget opacitySlider;
     
     private ButtonWidget saveButton;
     private ColorPickerWidget colorPicker;
     private String activePickerField = null;
 
     public GlobalSettingsScreen(Screen parent) {
-        super(Text.literal("Global Settings - SecondChat"));
+        super(Text.literal("Global Settings"));
         this.parent = parent;
     }
 
@@ -43,96 +45,55 @@ public class GlobalSettingsScreen extends Screen {
         
         com.bame.secondchat.config.GlobalConfig config = com.bame.secondchat.config.GlobalConfig.getInstance();
         
-        int panelWidth = 280;
+        int panelWidth = 400;
+        int panelHeight = 260;
         int panelX = (this.width - panelWidth) / 2;
-        int contentX = panelX + 20;
-        int contentWidth = 240;
-        int startY = 60;
+        int panelY = (this.height - panelHeight) / 2;
         
-        this.searchField = new TextFieldWidget(this.textRenderer, contentX, 35, contentWidth, 20, Text.literal("Search"));
-        this.searchField.setMaxLength(50);
-        this.searchField.setSuggestion("Search settings...");
-        this.searchField.setChangedListener(text -> {
-            if (text.isEmpty()) {
-                this.searchField.setSuggestion("Search settings...");
-            } else {
-                this.searchField.setSuggestion("");
-            }
-        });
-        this.addDrawableChild(this.searchField);
+        int contentX = panelX + 110;
+        int widgetX = contentX + 130;
+        int widgetW = 140;
         
-        this.maxMessagesField = new TextFieldWidget(this.textRenderer, contentX, startY, contentWidth, 20, Text.literal("Max Messages"));
+        // BEHAVIOR (Tab 0)
+        this.maxMessagesField = new TextFieldWidget(this.textRenderer, widgetX, panelY + 30, widgetW, 20, Text.literal("Max Messages"));
         this.maxMessagesField.setText(String.valueOf(config.maxMessages));
         this.addDrawableChild(this.maxMessagesField);
         
-        this.timestampFormatField = new TextFieldWidget(this.textRenderer, contentX, startY + 30, contentWidth, 20, Text.literal("Timestamp Format"));
+        this.stackMessagesField = new TextFieldWidget(this.textRenderer, widgetX, panelY + 70, widgetW, 20, Text.literal("Stack Messages"));
+        this.stackMessagesField.setText(String.valueOf(config.stackMessages));
+        this.addDrawableChild(this.stackMessagesField);
+        
+        // APPEARANCE (Tab 1)
+        this.timestampFormatField = new TextFieldWidget(this.textRenderer, widgetX, panelY + 30, widgetW, 20, Text.literal("Timestamp Format"));
         this.timestampFormatField.setMaxLength(50);
         this.timestampFormatField.setText(config.timestampFormat);
         this.addDrawableChild(this.timestampFormatField);
         
-        this.timestampColorField = new TextFieldWidget(this.textRenderer, contentX + 25, startY + 60, contentWidth - 25 - 55, 20, Text.literal("Timestamp Color"));
+        this.timestampColorField = new TextFieldWidget(this.textRenderer, widgetX + 25, panelY + 70, widgetW - 25 - 50, 20, Text.literal("Timestamp Color"));
         this.timestampColorField.setMaxLength(9);
         this.timestampColorField.setText(config.timestampColor);
         this.addDrawableChild(this.timestampColorField);
         
         this.timestampColorResetButton = ButtonWidget.builder(Text.literal("Reset"), button -> {
             this.timestampColorField.setText("#AAAAAA");
-        }).dimensions(contentX + contentWidth - 50, startY + 60, 50, 20).build();
+        }).dimensions(widgetX + widgetW - 45, panelY + 70, 45, 20).build();
         this.addDrawableChild(this.timestampColorResetButton);
         
-        this.selectionColorField = new TextFieldWidget(this.textRenderer, contentX + 25, startY + 90, contentWidth - 25 - 55, 20, Text.literal("Selection Color"));
+        this.selectionColorField = new TextFieldWidget(this.textRenderer, widgetX + 25, panelY + 110, widgetW - 25 - 50, 20, Text.literal("Selection Color"));
         this.selectionColorField.setMaxLength(9);
         this.selectionColorField.setText(config.selectionColor);
         this.addDrawableChild(this.selectionColorField);
         
         this.selectionColorResetButton = ButtonWidget.builder(Text.literal("Reset"), button -> {
             this.selectionColorField.setText("#5555FF");
-        }).dimensions(contentX + contentWidth - 50, startY + 90, 50, 20).build();
+        }).dimensions(widgetX + widgetW - 45, panelY + 110, 45, 20).build();
         this.addDrawableChild(this.selectionColorResetButton);
         
-        this.stackMessagesField = new TextFieldWidget(this.textRenderer, contentX, startY + 120, contentWidth, 20, Text.literal("Stack Messages"));
-        this.stackMessagesField.setText(String.valueOf(config.stackMessages));
-        this.addDrawableChild(this.stackMessagesField);
-        
-        Text initialFontText = Text.literal(com.bame.secondchat.config.ModConfig.showFontDropdown ? "Yes" : "No")
-            .withColor(com.bame.secondchat.config.ModConfig.showFontDropdown ? 0x00FF00 : 0xFF0000);
-            
-        this.showFontDropdownButton = ButtonWidget.builder(initialFontText, button -> {
-            com.bame.secondchat.config.ModConfig.showFontDropdown = !com.bame.secondchat.config.ModConfig.showFontDropdown;
-            Text newText = Text.literal(com.bame.secondchat.config.ModConfig.showFontDropdown ? "Yes" : "No")
-                .withColor(com.bame.secondchat.config.ModConfig.showFontDropdown ? 0x00FF00 : 0xFF0000);
-            button.setMessage(newText);
-        }).dimensions(contentX, startY + 150, contentWidth, 20).build();
-        this.addDrawableChild(this.showFontDropdownButton);
-        
-        Text initialEmojiText = Text.literal(com.bame.secondchat.config.ModConfig.showEmojiButton ? "Yes" : "No")
-            .withColor(com.bame.secondchat.config.ModConfig.showEmojiButton ? 0x00FF00 : 0xFF0000);
-            
-        this.showEmojiButtonButton = ButtonWidget.builder(initialEmojiText, button -> {
-            com.bame.secondchat.config.ModConfig.showEmojiButton = !com.bame.secondchat.config.ModConfig.showEmojiButton;
-            Text newText = Text.literal(com.bame.secondchat.config.ModConfig.showEmojiButton ? "Yes" : "No")
-                .withColor(com.bame.secondchat.config.ModConfig.showEmojiButton ? 0x00FF00 : 0xFF0000);
-            button.setMessage(newText);
-        }).dimensions(contentX, startY + 180, contentWidth, 20).build();
-        this.addDrawableChild(this.showEmojiButtonButton);
-        
-        Text initialHeadsText = Text.literal(com.bame.secondchat.config.ModConfig.showPlayerHeads ? "Yes" : "No")
-            .withColor(com.bame.secondchat.config.ModConfig.showPlayerHeads ? 0x00FF00 : 0xFF0000);
-            
-        this.showPlayerHeadsButton = ButtonWidget.builder(initialHeadsText, button -> {
-            com.bame.secondchat.config.ModConfig.showPlayerHeads = !com.bame.secondchat.config.ModConfig.showPlayerHeads;
-            Text newText = Text.literal(com.bame.secondchat.config.ModConfig.showPlayerHeads ? "Yes" : "No")
-                .withColor(com.bame.secondchat.config.ModConfig.showPlayerHeads ? 0x00FF00 : 0xFF0000);
-            button.setMessage(newText);
-        }).dimensions(contentX, startY + 210, contentWidth, 20).build();
-        this.addDrawableChild(this.showPlayerHeadsButton);
-
-        this.opacitySlider = new net.minecraft.client.gui.widget.SliderWidget(contentX, startY + 240, contentWidth, 20, Text.literal("Text Background Opacity: " + config.chatBackgroundOpacity + "%"), config.chatBackgroundOpacity / 100.0) {
+        this.opacitySlider = new net.minecraft.client.gui.widget.SliderWidget(widgetX, panelY + 150, widgetW, 20, Text.literal(config.chatBackgroundOpacity + "%"), config.chatBackgroundOpacity / 100.0) {
             @Override
             protected void updateMessage() {
-                this.setMessage(Text.literal("Text Background Opacity: " + (int)(this.value * 100) + "%"));
+                this.setMessage(Text.literal((int)(this.value * 100) + "%"));
             }
-
             @Override
             protected void applyValue() {
                 config.chatBackgroundOpacity = (int)(this.value * 100);
@@ -140,13 +101,21 @@ public class GlobalSettingsScreen extends Screen {
         };
         this.addDrawableChild(this.opacitySlider);
         
-        int panelHeight = Math.max(300, this.height - 40);
-        int panelY = 20;
+        // FEATURES (Tab 2)
+        this.showFontDropdownButton = createToggleButton(widgetX, panelY + 30, widgetW, com.bame.secondchat.config.ModConfig.showFontDropdown, val -> com.bame.secondchat.config.ModConfig.showFontDropdown = val);
+        this.addDrawableChild(this.showFontDropdownButton);
+        
+        this.showEmojiButtonButton = createToggleButton(widgetX, panelY + 70, widgetW, com.bame.secondchat.config.ModConfig.showEmojiButton, val -> com.bame.secondchat.config.ModConfig.showEmojiButton = val);
+        this.addDrawableChild(this.showEmojiButtonButton);
+        
+        this.showPlayerHeadsButton = createToggleButton(widgetX, panelY + 110, widgetW, com.bame.secondchat.config.ModConfig.showPlayerHeads, val -> com.bame.secondchat.config.ModConfig.showPlayerHeads = val);
+        this.addDrawableChild(this.showPlayerHeadsButton);
+
+        // SAVE BUTTON
         this.saveButton = ButtonWidget.builder(Text.literal("Save & Close"), button -> {
             saveSettings();
             this.client.setScreen(this.parent);
-        }).dimensions(contentX, panelY + panelHeight - 30, contentWidth, 20).build();
-        
+        }).dimensions(contentX + 20, panelY + panelHeight - 35, 240, 20).build();
         this.addDrawableChild(this.saveButton);
         
         this.colorPicker = new ColorPickerWidget(0, 0, hex -> {
@@ -156,70 +125,200 @@ public class GlobalSettingsScreen extends Screen {
                 this.timestampColorField.setText(hex);
             }
         });
+        
+        updateVisibility();
     }
     
+    private ButtonWidget createToggleButton(int x, int y, int w, boolean initial, java.util.function.Consumer<Boolean> onChange) {
+        Text t = Text.literal(initial ? "ON" : "OFF").withColor(initial ? 0x55FF55 : 0xFF5555);
+        return ButtonWidget.builder(t, btn -> {
+            boolean current = btn.getMessage().getString().equals("ON");
+            boolean next = !current;
+            onChange.accept(next);
+            btn.setMessage(Text.literal(next ? "ON" : "OFF").withColor(next ? 0x55FF55 : 0xFF5555));
+        }).dimensions(x, y, w, 20).build();
+    }
+    
+    private void updateVisibility() {
+        this.maxMessagesField.visible = (currentTab == 0);
+        this.stackMessagesField.visible = (currentTab == 0);
+        
+        this.timestampFormatField.visible = (currentTab == 1);
+        this.timestampColorField.visible = (currentTab == 1);
+        this.timestampColorResetButton.visible = (currentTab == 1);
+        this.selectionColorField.visible = (currentTab == 1);
+        this.selectionColorResetButton.visible = (currentTab == 1);
+        this.opacitySlider.visible = (currentTab == 1);
+        
+        this.showFontDropdownButton.visible = (currentTab == 2);
+        this.showEmojiButtonButton.visible = (currentTab == 2);
+        this.showPlayerHeadsButton.visible = (currentTab == 2);
+    }
+    
+    private void saveSettings() {
+        com.bame.secondchat.config.GlobalConfig config = com.bame.secondchat.config.GlobalConfig.getInstance();
+        try {
+            config.maxMessages = Integer.parseInt(this.maxMessagesField.getText());
+        } catch (NumberFormatException ignored) {}
+        try {
+            config.stackMessages = Integer.parseInt(this.stackMessagesField.getText());
+        } catch (NumberFormatException ignored) {}
+        
+        config.timestampFormat = this.timestampFormatField.getText();
+        config.timestampColor = this.timestampColorField.getText();
+        config.selectionColor = this.selectionColorField.getText();
+        
+        com.bame.secondchat.config.GlobalConfig.save();
+        
+        com.bame.secondchat.config.ModConfig.save();
+    }
+    
+    @Override
+    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+        super.render(context, mouseX, mouseY, delta);
+        
+        int panelWidth = 400;
+        int panelHeight = 260;
+        int panelX = (this.width - panelWidth) / 2;
+        int panelY = (this.height - panelHeight) / 2;
+        int sidebarW = 100;
+        
+        // Background and Border
+        context.fill(panelX - 1, panelY - 1, panelX + panelWidth + 1, panelY + panelHeight + 1, 0xFF333333);
+        context.fill(panelX, panelY, panelX + sidebarW, panelY + panelHeight, 0xFF111111); // Sidebar
+        context.fill(panelX + sidebarW, panelY, panelX + panelWidth, panelY + panelHeight, 0xFF1E1E1E); // Main content
+        
+        // Sidebar Title
+        context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("Settings").withColor(0xFFFFAA00), panelX + sidebarW / 2, panelY + 15, 0xFFFFFFFF);
+        context.fill(panelX + 10, panelY + 30, panelX + sidebarW - 10, panelY + 31, 0xFF333333); // Divider
+        
+        // Sidebar Tabs
+        String[] tabs = {"Behavior", "Appearance", "Features"};
+        for (int i = 0; i < tabs.length; i++) {
+            int tabY = panelY + 40 + (i * 35);
+            boolean hovered = mouseX >= panelX && mouseX <= panelX + sidebarW && mouseY >= tabY && mouseY < tabY + 35;
+            boolean active = (currentTab == i);
+            
+            if (active) {
+                context.fill(panelX, tabY, panelX + sidebarW, tabY + 35, 0xFF2A2A2A);
+                context.fill(panelX, tabY, panelX + 3, tabY + 35, 0xFFFFAA00); // Orange indicator
+            } else if (hovered) {
+                context.fill(panelX, tabY, panelX + sidebarW, tabY + 35, 0xFF222222);
+            }
+            
+            int color = active ? 0xFFFFFFFF : 0xFFAAAAAA;
+            context.drawTextWithShadow(this.textRenderer, Text.literal(tabs[i]), panelX + 15, tabY + 14, color);
+        }
+        
+        // Content Area Labels
+        int contentX = panelX + 110;
+        int widgetX = contentX + 130;
+        
+        if (currentTab == 0) { // Behavior
+            context.drawTextWithShadow(this.textRenderer, Text.literal("Max Messages:"), contentX, panelY + 36, 0xFFFFFFFF);
+            context.drawTextWithShadow(this.textRenderer, Text.literal("0 = unlimited"), contentX, panelY + 48, 0xFF888888);
+            
+            context.drawTextWithShadow(this.textRenderer, Text.literal("Stack Messages:"), contentX, panelY + 76, 0xFFFFFFFF);
+            context.drawTextWithShadow(this.textRenderer, Text.literal("0 = disabled"), contentX, panelY + 88, 0xFF888888);
+        } else if (currentTab == 1) { // Appearance
+            context.drawTextWithShadow(this.textRenderer, Text.literal("Timestamp Format:"), contentX, panelY + 36, 0xFFFFFFFF);
+            
+            context.drawTextWithShadow(this.textRenderer, Text.literal("Timestamp Color:"), contentX, panelY + 76, 0xFFFFFFFF);
+            int tColor = parseColorForPreview(this.timestampColorField.getText());
+            context.fill(widgetX - 1, panelY + 69, widgetX + 21, panelY + 91, 0xFFFFFFFF);
+            context.fill(widgetX, panelY + 70, widgetX + 20, panelY + 90, tColor);
+            
+            context.drawTextWithShadow(this.textRenderer, Text.literal("Selection Color:"), contentX, panelY + 116, 0xFFFFFFFF);
+            int sColor = parseColorForPreview(this.selectionColorField.getText());
+            context.fill(widgetX - 1, panelY + 109, widgetX + 21, panelY + 131, 0xFFFFFFFF);
+            context.fill(widgetX, panelY + 110, widgetX + 20, panelY + 130, sColor);
+            
+            context.drawTextWithShadow(this.textRenderer, Text.literal("Chat Background:"), contentX, panelY + 156, 0xFFFFFFFF);
+            context.drawTextWithShadow(this.textRenderer, Text.literal("Opacity"), contentX, panelY + 168, 0xFF888888);
+        } else if (currentTab == 2) { // Features
+            context.drawTextWithShadow(this.textRenderer, Text.literal("Show Font Dropdown:"), contentX, panelY + 36, 0xFFFFFFFF);
+            context.drawTextWithShadow(this.textRenderer, Text.literal("Show Emoji Button:"), contentX, panelY + 76, 0xFFFFFFFF);
+            context.drawTextWithShadow(this.textRenderer, Text.literal("Show Player Heads:"), contentX, panelY + 116, 0xFFFFFFFF);
+        }
+        
+        if (colorPicker != null) colorPicker.render(context, mouseX, mouseY, delta);
+    }
     
     @Override
     public boolean mouseClicked(Click click, boolean inside) {
         double mouseX = click.x();
         double mouseY = click.y();
+        
         if (colorPicker != null && colorPicker.isVisible()) {
             if (colorPicker.mouseClicked(click, inside)) {
                 return true;
             } else {
-                colorPicker.setVisible(false); // Close if clicked outside
+                colorPicker.setVisible(false);
             }
         }
         
-        int panelWidth = 280;
+        int panelWidth = 400;
+        int panelHeight = 260;
         int panelX = (this.width - panelWidth) / 2;
-        int contentX = panelX + 20;
+        int panelY = (this.height - panelHeight) / 2;
+        int sidebarW = 100;
         
-        if (this.timestampColorField.visible) {
-            int y = this.timestampColorField.getY();
-            if (mouseX >= contentX && mouseX <= contentX + 20 && mouseY >= y - 1 && mouseY <= y + 21) {
-                activePickerField = "timestamp";
-                colorPicker.setPosition(contentX - 140, y);
-                colorPicker.setColor(this.timestampColorField.getText());
-                colorPicker.setVisible(true);
-                return true;
+        // Sidebar Click Detection
+        if (mouseX >= panelX && mouseX <= panelX + sidebarW) {
+            for (int i = 0; i < 3; i++) {
+                int tabY = panelY + 40 + (i * 35);
+                if (mouseY >= tabY && mouseY < tabY + 35) {
+                    currentTab = i;
+                    updateVisibility();
+                    return true;
+                }
             }
         }
         
-        if (this.selectionColorField.visible) {
-            int y = this.selectionColorField.getY();
-            if (mouseX >= contentX && mouseX <= contentX + 20 && mouseY >= y - 1 && mouseY <= y + 21) {
-                activePickerField = "selection";
-                colorPicker.setPosition(contentX - 140, y);
-                colorPicker.setColor(this.selectionColorField.getText());
-                colorPicker.setVisible(true);
-                return true;
+        // Color Box Click Detection
+        if (currentTab == 1) {
+            int contentX = panelX + 110;
+            int widgetX = contentX + 130;
+            
+            if (this.timestampColorField.visible) {
+                if (mouseX >= widgetX && mouseX <= widgetX + 20 && mouseY >= panelY + 70 && mouseY <= panelY + 90) {
+                    activePickerField = "timestamp";
+                    colorPicker.setPosition(widgetX - 130, panelY + 70);
+                    colorPicker.setColor(this.timestampColorField.getText());
+                    colorPicker.setVisible(true);
+                    return true;
+                }
+            }
+            if (this.selectionColorField.visible) {
+                if (mouseX >= widgetX && mouseX <= widgetX + 20 && mouseY >= panelY + 110 && mouseY <= panelY + 130) {
+                    activePickerField = "selection";
+                    colorPicker.setPosition(widgetX - 130, panelY + 110);
+                    colorPicker.setColor(this.selectionColorField.getText());
+                    colorPicker.setVisible(true);
+                    return true;
+                }
             }
         }
         
         return super.mouseClicked(click, inside);
     }
-    
+
     @Override
     public boolean mouseReleased(Click click) {
-        double mouseX = click.x();
-        double mouseY = click.y();
         if (colorPicker != null && colorPicker.isVisible()) {
             if (colorPicker.mouseReleased(click)) return true;
         }
         return super.mouseReleased(click);
     }
-    
+
     @Override
     public boolean mouseDragged(Click click, double deltaX, double deltaY) {
-        double mouseX = click.x();
-        double mouseY = click.y();
         if (colorPicker != null && colorPicker.isVisible()) {
             if (colorPicker.mouseDragged(click, deltaX, deltaY)) return true;
         }
         return super.mouseDragged(click, deltaX, deltaY);
     }
-    
+
     @Override
     public boolean charTyped(CharInput charInput) {
         if (colorPicker != null && colorPicker.isVisible()) {
@@ -227,7 +326,7 @@ public class GlobalSettingsScreen extends Screen {
         }
         return super.charTyped(charInput);
     }
-    
+
     @Override
     public boolean keyPressed(KeyInput keyInput) {
         if (colorPicker != null && colorPicker.isVisible()) {
@@ -236,188 +335,20 @@ public class GlobalSettingsScreen extends Screen {
         return super.keyPressed(keyInput);
     }
 
-    private void saveSettings() {
-        GlobalConfig config = GlobalConfig.getInstance();
+    private int parseColorForPreview(String hex) {
+        if (hex == null || hex.isEmpty()) return 0xFF000000;
         try {
-            config.maxMessages = Integer.parseInt(this.maxMessagesField.getText());
-        } catch (NumberFormatException e) {
-            config.maxMessages = 0;
-        }
-        try {
-            config.stackMessages = Integer.parseInt(this.stackMessagesField.getText());
-        } catch (NumberFormatException e) {
-            config.stackMessages = 0;
-        }
-        config.timestampFormat = this.timestampFormatField.getText();
-        config.timestampColor = this.timestampColorField.getText();
-        config.selectionColor = this.selectionColorField.getText();
-        
-        GlobalConfig.save();
-    }
-
-    private int parseColorForPreview(String colorStr) {
-        if (colorStr == null || colorStr.trim().isEmpty()) return 0xFF000000;
-        if (colorStr.startsWith("§")) {
-            // Very basic mapping for legacy codes
-            char c = colorStr.length() > 1 ? colorStr.charAt(1) : 'f';
-            return switch (c) {
-                case '0' -> 0xFF000000; case '1' -> 0xFF0000AA; case '2' -> 0xFF00AA00; case '3' -> 0xFF00AAAA;
-                case '4' -> 0xFFAA0000; case '5' -> 0xFFAA00AA; case '6' -> 0xFFFFAA00; case '7' -> 0xFFAAAAAA;
-                case '8' -> 0xFF555555; case '9' -> 0xFF5555FF; case 'a' -> 0xFF55FF55; case 'b' -> 0xFF55FFFF;
-                case 'c' -> 0xFFFF5555; case 'd' -> 0xFFFF55FF; case 'e' -> 0xFFFFFF55; case 'f' -> 0xFFFFFFFF;
-                default -> 0xFFFFFFFF;
-            };
-        }
-        if (colorStr.startsWith("#")) {
-            try {
-                long val = Long.parseLong(colorStr.substring(1), 16);
-                if (colorStr.length() == 7) { // #RRGGBB
-                    return (int) (0xFF000000 | val);
-                } else if (colorStr.length() == 9) { // #AARRGGBB
-                    return (int) val;
-                }
-            } catch (Exception ignored) {}
-        }
+            if (hex.startsWith("#")) hex = hex.substring(1);
+            if (hex.length() == 6) {
+                return 0xFF000000 | Integer.parseInt(hex, 16);
+            } else if (hex.length() == 8) {
+                long val = Long.parseLong(hex, 16);
+                return (int) val;
+            }
+        } catch (Exception ignored) {}
         return 0xFF000000;
     }
-
-    @Override
-    public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
-        this.renderDarkening(context);
-        
-        int panelWidth = 300;
-        int panelHeight = this.height - 40;
-        int left = this.width / 2 - panelWidth / 2;
-        int top = 20;
-        int right = this.width / 2 + panelWidth / 2;
-        int bottom = this.height - 20;
-        
-        context.fill(left, top, right, bottom, 0xDD000000);
-        context.fill(left - 1, top - 1, right + 1, top, 0x55FFFFFF);
-        context.fill(left - 1, bottom, right + 1, bottom + 1, 0x55FFFFFF);
-        context.fill(left - 1, top, left, bottom, 0x55FFFFFF);
-        context.fill(right, top, right + 1, bottom, 0x55FFFFFF);
-    }
     
-    @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        super.render(context, mouseX, mouseY, delta);
-        
-        int panelWidth = 280;
-        int panelHeight = Math.max(300, this.height - 40);
-        int panelX = (this.width - panelWidth) / 2;
-        int panelY = 20;
-        
-        context.fill(panelX, panelY, panelX + panelWidth, panelY + panelHeight, 0xCC000000);
-        context.fill(panelX - 1, panelY - 1, panelX + panelWidth + 1, panelY, 0xFF555555);
-        context.fill(panelX - 1, panelY + panelHeight, panelX + panelWidth + 1, panelY + panelHeight + 1, 0xFF555555);
-        context.fill(panelX - 1, panelY, panelX, panelY + panelHeight, 0xFF555555);
-        context.fill(panelX + panelWidth, panelY, panelX + panelWidth + 1, panelY + panelHeight, 0xFF555555);
-        
-        context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("Global Settings").withColor(0xFFFFAA00).append(Text.literal(" - SecondChat").withColor(0xFFFFFFFF)), this.width / 2, panelY + 10, 0xFFFFFFFF);
-        
-        String search = this.searchField.getText().toLowerCase();
-        
-        boolean showMaxMsg = "max messages".contains(search) || search.isEmpty();
-        boolean showStackMsg = "stack messages".contains(search) || search.isEmpty();
-        boolean showTsFormat = "timestamp format".contains(search) || search.isEmpty();
-        boolean showTsColor = "timestamp color".contains(search) || search.isEmpty();
-        boolean showSelColor = "selection color".contains(search) || search.isEmpty();
-        boolean showFontDropdownSetting = "show font dropdown".contains(search) || search.isEmpty();
-        boolean showEmojiBtnSetting = "show emoji button".contains(search) || search.isEmpty();
-        boolean showHeadsBtnSetting = "show player heads".contains(search) || search.isEmpty();
-        boolean showOpacitySetting = "text background opacity".contains(search) || search.isEmpty();
-        
-        this.maxMessagesField.visible = showMaxMsg;
-        this.stackMessagesField.visible = showStackMsg;
-        this.timestampFormatField.visible = showTsFormat;
-        this.timestampColorField.visible = showTsColor;
-        this.timestampColorResetButton.visible = showTsColor;
-        this.selectionColorField.visible = showSelColor;
-        this.selectionColorResetButton.visible = showSelColor;
-        this.showFontDropdownButton.visible = showFontDropdownSetting;
-        this.showEmojiButtonButton.visible = showEmojiBtnSetting;
-        this.showPlayerHeadsButton.visible = showHeadsBtnSetting;
-        this.opacitySlider.visible = showOpacitySetting;
-        
-        int contentX = panelX + 20;
-        int currentY = 60;
-        
-        if (search.isEmpty()) {
-            context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("--- Chat Behavior ---").withColor(0xFFFFFF55), this.width / 2, currentY, 0xFFFFFF55);
-            currentY += 20;
-        }
-        if (showMaxMsg) {
-            context.drawTextWithShadow(this.textRenderer, Text.literal("Max Messages (0 = unendlich)"), contentX, currentY - 10, 0xFFAAAAAA);
-            this.maxMessagesField.setY(currentY);
-            currentY += 35;
-        }
-        if (showStackMsg) {
-            context.drawTextWithShadow(this.textRenderer, Text.literal("Stack Messages (0 = aus)"), contentX, currentY - 10, 0xFFAAAAAA);
-            this.stackMessagesField.setY(currentY);
-            currentY += 35;
-        }
-        
-        if (search.isEmpty()) {
-            currentY += 5;
-            context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("--- Appearance ---").withColor(0xFF55FF55), this.width / 2, currentY, 0xFF55FF55);
-            currentY += 20;
-        }
-        if (showTsFormat) {
-            context.drawTextWithShadow(this.textRenderer, Text.literal("Timestamp Format"), contentX, currentY - 10, 0xFFAAAAAA);
-            this.timestampFormatField.setY(currentY);
-            currentY += 35;
-        }
-        if (showTsColor) {
-            context.drawTextWithShadow(this.textRenderer, Text.literal("Timestamp Color"), contentX, currentY - 10, 0xFFAAAAAA);
-            this.timestampColorField.setY(currentY);
-            this.timestampColorResetButton.setY(currentY);
-            
-            int color = parseColorForPreview(this.timestampColorField.getText());
-            context.fill(contentX - 1, currentY - 1, contentX + 21, currentY + 21, 0xFFFFFFFF);
-            context.fill(contentX, currentY, contentX + 20, currentY + 20, color);
-            currentY += 35;
-        }
-        if (showSelColor) {
-            context.drawTextWithShadow(this.textRenderer, Text.literal("Selection Color (Hex)"), contentX, currentY - 10, 0xFFAAAAAA);
-            this.selectionColorField.setY(currentY);
-            this.selectionColorResetButton.setY(currentY);
-            
-            int color = parseColorForPreview(this.selectionColorField.getText());
-            context.fill(contentX - 1, currentY - 1, contentX + 21, currentY + 21, 0xFFFFFFFF);
-            context.fill(contentX, currentY, contentX + 20, currentY + 20, color);
-            currentY += 35;
-        }
-        if (showOpacitySetting) {
-            context.drawTextWithShadow(this.textRenderer, Text.literal("Text Background Opacity"), contentX, currentY - 10, 0xFFAAAAAA);
-            this.opacitySlider.setY(currentY);
-            currentY += 35;
-        }
-        
-        if (search.isEmpty()) {
-            currentY += 5;
-            context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("--- Features ---").withColor(0xFF55FFFF), this.width / 2, currentY, 0xFF55FFFF);
-            currentY += 20;
-        }
-        if (showFontDropdownSetting) {
-            context.drawTextWithShadow(this.textRenderer, Text.literal("Show Font Dropdown"), contentX, currentY - 10, 0xFFAAAAAA);
-            this.showFontDropdownButton.setY(currentY);
-            currentY += 35;
-        }
-        if (showEmojiBtnSetting) {
-            context.drawTextWithShadow(this.textRenderer, Text.literal("Show Emoji Button"), contentX, currentY - 10, 0xFFAAAAAA);
-            this.showEmojiButtonButton.setY(currentY);
-            currentY += 35;
-        }
-        if (showHeadsBtnSetting) {
-            context.drawTextWithShadow(this.textRenderer, Text.literal("Show Player Heads"), contentX, currentY - 10, 0xFFAAAAAA);
-            this.showPlayerHeadsButton.setY(currentY);
-            currentY += 35;
-        }
-        
-        if (colorPicker != null) colorPicker.render(context, mouseX, mouseY, delta);
-    }
-
     @Override
     public void close() {
         this.client.setScreen(this.parent);
