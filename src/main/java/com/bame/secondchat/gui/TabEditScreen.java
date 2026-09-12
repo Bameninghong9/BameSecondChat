@@ -211,12 +211,11 @@ public class TabEditScreen extends Screen {
         // Glass panel
         context.fill(left, top, right, bottom, 0x88111111);
         
-        // Glowing cyan/blue border line on top and bottom
-        context.fill(left, top, right, top + 2, 0xFF00FFFF);
-        context.fill(left, bottom - 2, right, bottom, 0xFF00FFFF);
-        // Subtle side borders
-        context.fill(left, top, left + 1, bottom, 0xAA00AAAA);
-        context.fill(right - 1, top, right, bottom, 0xAA00AAAA);
+        // Solid grey border
+        context.fill(left, top, right, top + 1, 0xFF555555);
+        context.fill(left, bottom - 1, right, bottom, 0xFF555555);
+        context.fill(left, top, left + 1, bottom, 0xFF555555);
+        context.fill(right - 1, top, right, bottom, 0xFF555555);
     }
 
     private static class CustomButton extends net.minecraft.client.gui.widget.ClickableWidget {
@@ -233,8 +232,8 @@ public class TabEditScreen extends Screen {
         protected void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
             boolean hovered = this.isHovered();
             
-            int bg = hovered ? (this.themeColor & 0x55FFFFFF) : 0x44000000;
-            int border = hovered ? this.themeColor : 0xAA555555;
+            int bg = hovered ? 0xFF444444 : 0xFF222222;
+            int border = hovered ? this.themeColor : 0xFF555555;
             
             // Draw background
             context.fill(this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, bg);
