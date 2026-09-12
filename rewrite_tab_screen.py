@@ -1,4 +1,24 @@
-package com.bame.secondchat.gui;
+﻿import sys
+import re
+
+# UPDATE GLOBAL SETTINGS TRANSPARENCY
+with open('C:/Users/thorb/.gemini/antigravity/scratch/BameSecondChat/src/main/java/com/bame/secondchat/gui/GlobalSettingsScreen.java', 'r', encoding='utf-8') as f:
+    g_text = f.read()
+
+g_text = g_text.replace('0x88333333', '0x55333333')
+g_text = g_text.replace('0x88000000', '0x55000000')
+g_text = g_text.replace('0x88111111', '0x55111111')
+g_text = g_text.replace('0x882A2A2A', '0x552A2A2A')
+g_text = g_text.replace('0x88222222', '0x55222222')
+g_text = g_text.replace('0xAA444444', '0x77444444')
+g_text = g_text.replace('0xAA222222', '0x77222222')
+g_text = g_text.replace('0xDD000000', '0x77000000')
+
+with open('C:/Users/thorb/.gemini/antigravity/scratch/BameSecondChat/src/main/java/com/bame/secondchat/gui/GlobalSettingsScreen.java', 'w', encoding='utf-8') as f:
+    f.write(g_text)
+
+# REWRITE TAB EDIT SCREEN
+tab_code = '''package com.bame.secondchat.gui;
 
 import com.bame.secondchat.data.ChatTab;
 import com.bame.secondchat.data.FilterRule;
@@ -264,3 +284,7 @@ public class TabEditScreen extends Screen {
         protected void appendClickableNarrations(net.minecraft.client.gui.screen.narration.NarrationMessageBuilder builder) {}
     }
 }
+'''
+
+with open('C:/Users/thorb/.gemini/antigravity/scratch/BameSecondChat/src/main/java/com/bame/secondchat/gui/TabEditScreen.java', 'w', encoding='utf-8') as f:
+    f.write(tab_code)

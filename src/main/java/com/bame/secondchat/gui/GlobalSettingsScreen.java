@@ -177,13 +177,13 @@ public class GlobalSettingsScreen extends Screen {
         int sidebarW = 100;
         
         // Background and Border
-        context.fill(panelX - 1, panelY - 1, panelX + panelWidth + 1, panelY + panelHeight + 1, 0x88333333);
-        context.fill(panelX, panelY, panelX + sidebarW, panelY + panelHeight, 0x88000000); // Sidebar
-        context.fill(panelX + sidebarW, panelY, panelX + panelWidth, panelY + panelHeight, 0x88111111); // Main content
+        context.fill(panelX - 1, panelY - 1, panelX + panelWidth + 1, panelY + panelHeight + 1, 0x55333333);
+        context.fill(panelX, panelY, panelX + sidebarW, panelY + panelHeight, 0x55000000); // Sidebar
+        context.fill(panelX + sidebarW, panelY, panelX + panelWidth, panelY + panelHeight, 0x55111111); // Main content
         
         // Sidebar Title
         context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("Settings").withColor(0xFFFFAA00), panelX + sidebarW / 2, panelY + 15, 0xFFFFFFFF);
-        context.fill(panelX + 10, panelY + 30, panelX + sidebarW - 10, panelY + 31, 0x88333333); // Divider
+        context.fill(panelX + 10, panelY + 30, panelX + sidebarW - 10, panelY + 31, 0x55333333); // Divider
         
         // Sidebar Tabs
         String[] tabs = {"Behavior", "Appearance", "Features"};
@@ -193,10 +193,10 @@ public class GlobalSettingsScreen extends Screen {
             boolean active = (currentTab == i);
             
             if (active) {
-                context.fill(panelX, tabY, panelX + sidebarW, tabY + 35, 0x882A2A2A);
+                context.fill(panelX, tabY, panelX + sidebarW, tabY + 35, 0x552A2A2A);
                 context.fill(panelX, tabY, panelX + 3, tabY + 35, 0xFFFFAA00); // Orange indicator
             } else if (hovered) {
-                context.fill(panelX, tabY, panelX + sidebarW, tabY + 35, 0x88222222);
+                context.fill(panelX, tabY, panelX + sidebarW, tabY + 35, 0x55222222);
             }
             
             int color = active ? 0xFFFFFFFF : 0xFFAAAAAA;
@@ -361,7 +361,7 @@ public class GlobalSettingsScreen extends Screen {
 
         @Override
         protected void renderWidget(net.minecraft.client.gui.DrawContext context, int mouseX, int mouseY, float delta) {
-            int bg = this.isHovered() ? 0xAA444444 : 0xAA222222;
+            int bg = this.isHovered() ? 0x77444444 : 0x77222222;
             
             // Draw background
             context.fill(this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, bg);
