@@ -233,7 +233,7 @@ public class TabEditScreen extends Screen {
             boolean hovered = this.isHovered();
             
             int bg = hovered ? 0xFF444444 : 0xFF222222;
-            int border = hovered ? this.themeColor : 0xFF555555;
+            int border = hovered ? 0xFF777777 : 0xFF555555;
             
             // Draw background
             context.fill(this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, bg);
